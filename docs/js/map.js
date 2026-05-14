@@ -126,8 +126,8 @@ async function loadData() {
 
         window.appState.clusterGroup.addLayers(markers);
 
-        // Build legend
-        buildLegend();
+        // Make getColorForType globally accessible for filters
+        window.getColorForType = getColorForType;
 
         // Dispatch event that data is loaded for other scripts (filters, tables)
         window.dispatchEvent(new CustomEvent('dataLoaded', { 
@@ -142,29 +142,6 @@ async function loadData() {
     } catch (error) {
         console.error('Error loading map data:', error);
     }
-}
-
-function buildLegend() {
-    const legendItems = document.getElementById('legend-items');
-    for (const [type, color] of Object.entries(window.appState.colors)) {
-        const item = document.createElement('div');
-        item.className = 'legend-item';
-        item.innerHTML = `<span class="color-dot" style="background-color: ${color}"></span>${type}`;
-        legendItems.appendChild(item);
-    }
-
-    // Legend toggle
-    const toggleBtn = document.getElementById('toggle-legend');
-    toggleBtn.onclick = () => {
-        const content = document.getElementById('legend-items');
-        if (content.style.display === 'none') {
-            content.style.display = 'block';
-            toggleBtn.textContent = '_';
-        } else {
-            content.style.display = 'none';
-            toggleBtn.textContent = '+';
-        }
-    };
 }
 
 // Fly to specific marker
