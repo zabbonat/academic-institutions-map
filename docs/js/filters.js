@@ -53,22 +53,61 @@ function buildTypeFilters(types) {
 }
 
 function buildCountryFilters(countries) {
-    const select = document.getElementById('country-filter');
-    select.innerHTML = '';
+    const container = document.getElementById('country-filters');
+    container.innerHTML = '';
+    
+    // Sort countries alphabetically
+    const sortedCountries = countries.filter(c => c).sort();
 
-    countries.forEach(country => {
-        if (!country) return;
-        const option = document.createElement('option');
-        option.value = country;
-        option.textContent = country;
-        select.appendChild(option);
+    sortedCountries.forEach(country => {
+        const label = document.createElement('label');
+        label.className = 'country-label';
+        
+        label.innerHTML = `
+            <input type="checkbox" value="${country}">
+            ${country}
+        `;
+
+        const checkbox = label.querySelector('input');
+        checkbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                activeFilters.countries.add(country);
+            } else {
+                activeFilters.countries.delete(country);
+            }
+            applyFilters();
+        });
+
+        container.appendChild(label);
     });
 
-    select.addEventListener('change', (e) => {
-        activeFilters.countries.clear();
-        Array.from(e.target.selectedOptions).forEach(opt => {
-            activeFilters.countries.add(opt.value);
+    // Country Search
+    const searchInput = document.getElementById('country-search');
+    searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        const labels = container.querySelectorAll('.country-label');
+        labels.forEach(label => {
+            const country = label.textContent.trim().toLowerCase();
+            if (country.includes(query)) {
+                label.style.display = 'flex';
+            } else {
+                label.style.display = 'none';
+            }
         });
+    });
+
+    // Clear All
+    const clearBtn = document.getElementById('clear-country-filter');
+    clearBtn.addEventListener('click', () => {
+        activeFilters.countries.clear();
+        const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(cb => cb.checked = false);
+        searchInput.value = '';
+        
+        // Reset display
+        const labels = container.querySelectorAll('.country-label');
+        labels.forEach(label => label.style.display = 'flex');
+
         applyFilters();
     });
 }
