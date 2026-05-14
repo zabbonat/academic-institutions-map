@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academic Institutions Map</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <!-- Leaflet MarkerCluster CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css"/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css"/>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div id="app-container">
+        <!-- Sidebar -->
+        <aside id="sidebar">
+            <div class="sidebar-header">
+                <h1>Academic Map</h1>
+                <p>Explore 110k+ institutions</p>
+                <button id="toggle-sidebar-mobile">☰</button>
+            </div>
+            
+            <div class="sidebar-content">
+                <!-- Search -->
+                <div class="filter-group search-container">
+                    <input type="text" id="search-input" placeholder="Search institutions..." autocomplete="off">
+                    <div id="search-results" class="hidden"></div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filter-group">
+                    <h3>Filter by Type</h3>
+                    <div id="type-filters" class="checkbox-group">
+                        <!-- Checkboxes injected by JS -->
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <h3>Filter by Country</h3>
+                    <select id="country-filter" multiple>
+                        <!-- Options injected by JS -->
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <h3>Min Works Count</h3>
+                    <div class="slider-container">
+                        <input type="range" id="works-slider" min="0" max="100000" value="0" step="100">
+                        <span id="works-slider-val">0</span>
+                    </div>
+                </div>
+
+                <!-- Top Institutions Tab -->
+                <div class="filter-group">
+                    <h3>Top Institutions</h3>
+                    <div class="table-container">
+                        <table id="top-institutions-table">
+                            <thead>
+                                <tr>
+                                    <th data-sort="display_name">Name</th>
+                                    <th data-sort="works_count" class="active-sort desc">Works</th>
+                                    <th data-sort="cited_by_count">Citations</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rows injected by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Map Container -->
+        <main id="map-wrapper">
+            <div id="map"></div>
+            
+            <!-- Legend -->
+            <div id="legend" class="leaflet-control">
+                <div class="legend-header">
+                    <h4>Institution Type</h4>
+                    <button id="toggle-legend">_</button>
+                </div>
+                <div id="legend-items" class="legend-content"></div>
+            </div>
+        </main>
+
+        <!-- Detail Panel (Right Sidebar) -->
+        <aside id="detail-panel" class="hidden">
+            <div class="detail-header">
+                <button id="close-detail">×</button>
+            </div>
+            <div id="detail-content">
+                <div class="detail-loader">Loading...</div>
+                <!-- Content injected by JS -->
+            </div>
+        </aside>
+    </div>
+
+    <!-- Libraries -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/nextapps-de/flexsearch@0.7.31/dist/flexsearch.bundle.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+    <!-- Custom Scripts -->
+    <script src="js/filters.js"></script>
+    <script src="js/detail.js"></script>
+    <script src="js/search.js"></script>
+    <script src="js/map.js"></script>
+
+</body>
+</html>
