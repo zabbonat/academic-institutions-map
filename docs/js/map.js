@@ -98,7 +98,9 @@ async function loadData() {
         const fieldsSet = new Set();
 
         data.forEach(inst => {
-            if (inst.f) Object.keys(inst.f).forEach(k => fieldsSet.add(k));
+            if (inst.f && Array.isArray(inst.f)) {
+                inst.f.forEach(k => fieldsSet.add(k));
+            }
             
             if (inst.lat && inst.lng) {
                 const type = inst.t || 'Unknown';
