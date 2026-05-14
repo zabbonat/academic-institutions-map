@@ -260,7 +260,9 @@ function setupSlider() {
     if (!slider) return;
 
     slider.addEventListener('input', (e) => {
-        if (display) display.textContent = parseInt(e.target.value, 10).toLocaleString();
+        const val = parseInt(e.target.value, 10);
+        if (display) display.textContent = val.toLocaleString();
+        activeFilters.minWorks = val;
         debouncedApplyFilters();
     });
 }
