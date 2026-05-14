@@ -22,6 +22,21 @@ window.addEventListener('dataLoaded', (e) => {
     // Initial render of table
     updateTable(window.appState.allData);
     setupTableSorting();
+
+    // Setup Top Institutions toggle
+    const toggleTop = document.getElementById('toggle-top-institutions');
+    const topContent = document.getElementById('top-institutions-content');
+    const topIcon = document.getElementById('top-inst-icon');
+
+    toggleTop.addEventListener('click', () => {
+        if (topContent.style.display === 'none') {
+            topContent.style.display = 'block';
+            topIcon.textContent = '▲';
+        } else {
+            topContent.style.display = 'none';
+            topIcon.textContent = '▼';
+        }
+    });
 });
 
 function buildTypeFilters(types) {
@@ -153,6 +168,10 @@ function applyFilters() {
 function updateTable(data) {
     const tbody = document.querySelector('#top-institutions-table tbody');
     tbody.innerHTML = '';
+
+    // Update subtitle
+    const subtitle = document.getElementById('top-inst-subtitle');
+    subtitle.textContent = `Showing top 50 of ${data.length.toLocaleString()} filtered institutions`;
 
     // Sort data
     const sorted = [...data].sort((a, b) => {

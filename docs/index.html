@@ -66,21 +66,27 @@
                 </div>
 
                 <!-- Top Institutions Tab -->
-                <div class="filter-group">
-                    <h3>Top Institutions</h3>
-                    <div class="table-container">
-                        <table id="top-institutions-table">
-                            <thead>
-                                <tr>
-                                    <th data-sort="n">Name</th>
-                                    <th data-sort="w" class="active-sort desc">Works</th>
-                                    <th data-sort="cb">Citations</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <!-- Rows injected by JS -->
-                            </tbody>
-                        </table>
+                <div class="filter-group" style="border-top: 1px solid var(--border-color); padding-top: 16px;">
+                    <h3 id="toggle-top-institutions" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; margin-bottom: 0;">
+                        Top Institutions 
+                        <span id="top-inst-icon">▼</span>
+                    </h3>
+                    <div id="top-institutions-content" style="display: none; margin-top: 12px;">
+                        <div id="top-inst-subtitle" style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;"></div>
+                        <div class="table-container">
+                            <table id="top-institutions-table">
+                                <thead>
+                                    <tr>
+                                        <th data-sort="n">Name</th>
+                                        <th data-sort="w" class="active-sort desc">Works</th>
+                                        <th data-sort="cb">Citations</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Rows injected by JS -->
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
