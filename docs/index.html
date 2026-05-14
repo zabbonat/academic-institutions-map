@@ -26,10 +26,20 @@
         <!-- Sidebar -->
         <aside id="sidebar">
             <div class="sidebar-header">
-                <h1>Academic Map</h1>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h1>Academic Map</h1>
+                    <button id="dark-mode-toggle" title="Toggle Dark Mode" style="background: none; border: 1px solid var(--border-color); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 1.2rem;">💡</button>
+                </div>
                 <p>Explore 110k+ institutions</p>
                 <button id="toggle-sidebar-mobile">☰</button>
             </div>
+
+            <script>
+                // Quick theme initialization to prevent flash
+                if (localStorage.getItem('dark-mode') === 'true') {
+                    document.body.classList.add('dark-mode');
+                }
+            </script>
             
             <div class="sidebar-content">
                 <!-- Search -->

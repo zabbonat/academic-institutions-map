@@ -27,6 +27,7 @@ window.addEventListener('dataLoaded', (e) => {
     setupSlider();
     setupTableSorting();
     setupLineageControls();
+    setupDarkMode();
     
     // Initial apply
     applyFilters();
@@ -48,6 +49,24 @@ window.addEventListener('dataLoaded', (e) => {
         });
     }
 });
+
+function setupDarkMode() {
+    const toggle = document.getElementById('dark-mode-toggle');
+    if (toggle) {
+        // Set initial icon
+        toggle.textContent = document.body.classList.contains('dark-mode') ? '🌙' : '💡';
+        
+        toggle.addEventListener('click', () => {
+            const isDark = document.body.classList.toggle('dark-mode');
+            localStorage.setItem('dark-mode', isDark);
+            toggle.textContent = isDark ? '🌙' : '💡';
+            
+            if (window.updateMapTheme) {
+                window.updateMapTheme();
+            }
+        });
+    }
+}
 
 function setupLineageControls() {
     const clearBtn = document.getElementById('clear-lineage-filter');
@@ -122,9 +141,9 @@ function buildOwnershipFilters(ownerships) {
 function buildDisciplineFilters(fields) {
     const select = document.getElementById('discipline-filter');
     const clearBtn = document.getElementById('clear-discipline-filter');
-    
-    const sortedFields = fields.filter(f => f).sort();
+    if (!select) return;
 
+    const sortedFields = fields.filter(f => f).sort();
     sortedFields.forEach(field => {
         const option = document.createElement('option');
         option.value = field;
@@ -138,16 +157,19 @@ function buildDisciplineFilters(fields) {
         applyFilters();
     });
 
-    clearBtn.addEventListener('click', () => {
-        activeFilters.discipline = '';
-        select.value = '';
-        clearBtn.style.display = 'none';
-        applyFilters();
-    });
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            activeFilters.discipline = '';
+            select.value = '';
+            clearBtn.style.display = 'none';
+            applyFilters();
+        });
+    }
 }
 
 function buildCountryFilters(countries) {
     const container = document.getElementById('country-filters');
+    if (!container) return;
     container.innerHTML = '';
     const sortedCountries = countries.filter(c => c).sort();
 
@@ -169,37 +191,42 @@ function buildCountryFilters(countries) {
     });
 
     const searchInput = document.getElementById('country-search');
-    searchInput.addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase().trim();
-        const labels = container.querySelectorAll('.country-label');
-        labels.forEach(label => {
-            const country = label.textContent.trim().toLowerCase();
-            if (country.includes(query)) {
-                label.style.display = 'flex';
-            } else {
-                label.style.display = 'none';
-            }
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase().trim();
+            const labels = container.querySelectorAll('.country-label');
+            labels.forEach(label => {
+                const country = label.textContent.trim().toLowerCase();
+                if (country.includes(query)) {
+                    label.style.display = 'flex';
+                } else {
+                    label.style.display = 'none';
+                }
+            });
         });
-    });
+    }
 
     const clearBtn = document.getElementById('clear-country-filter');
-    clearBtn.addEventListener('click', () => {
-        activeFilters.countries.clear();
-        const checkboxes = container.querySelectorAll('input[type="checkbox"]');
-        checkboxes.forEach(cb => cb.checked = false);
-        searchInput.value = '';
-        const labels = container.querySelectorAll('.country-label');
-        labels.forEach(label => label.style.display = 'flex');
-        applyFilters();
-    });
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            activeFilters.countries.clear();
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = false);
+            if (searchInput) searchInput.value = '';
+            const labels = container.querySelectorAll('.country-label');
+            labels.forEach(label => label.style.display = 'flex');
+            applyFilters();
+        });
+    }
 }
 
 function setupSlider() {
     const slider = document.getElementById('works-slider');
     const display = document.getElementById('works-slider-val');
+    if (!slider) return;
 
     slider.addEventListener('input', (e) => {
-        display.textContent = parseInt(e.target.value, 10).toLocaleString();
+        if (display) display.textContent = parseInt(e.target.value, 10).toLocaleString();
     });
 
     slider.addEventListener('change', (e) => {
@@ -236,17 +263,20 @@ function applyFilters() {
         }
     });
 
-    window.appState.clusterGroup.clearLayers();
-    window.appState.clusterGroup.addLayers(visibleMarkers);
+    if (window.appState.clusterGroup) {
+        window.appState.clusterGroup.clearLayers();
+        window.appState.clusterGroup.addLayers(visibleMarkers);
+    }
     updateTable(filteredData);
 }
 
 function updateTable(data) {
     const tbody = document.querySelector('#top-institutions-table tbody');
+    if (!tbody) return;
     tbody.innerHTML = '';
 
     const subtitle = document.getElementById('top-inst-subtitle');
-    subtitle.textContent = `Showing top 50 of ${data.length.toLocaleString()} filtered institutions`;
+    if (subtitle) subtitle.textContent = `Showing top 50 of ${data.length.toLocaleString()} filtered institutions`;
 
     const sorted = [...data].sort((a, b) => {
         const valA = a[currentSort.column] || 0;
@@ -271,7 +301,10 @@ function updateTable(data) {
         `;
         tr.addEventListener('click', () => {
             if (window.flyToInstitution) window.flyToInstitution(inst.id);
-            if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
+            if (window.innerWidth <= 768) {
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar) sidebar.classList.remove('open');
+            }
         });
         tbody.appendChild(tr);
     });
