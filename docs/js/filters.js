@@ -1,5 +1,6 @@
 let activeFilters = {
     types: new Set(),
+    ownerships: new Set(),
     countries: new Set(),
     discipline: '',
     minWorks: 0
@@ -11,12 +12,14 @@ let currentSort = {
 };
 
 window.addEventListener('dataLoaded', (e) => {
-    const { types, countries, fields } = e.detail;
+    const { types, countries, ownerships, fields } = e.detail;
     
-    // By default all types are active
+    // By default all types and ownerships are active
     activeFilters.types = new Set(types);
-
+    activeFilters.ownerships = new Set(ownerships);
+    
     buildTypeFilters(types);
+    buildOwnershipFilters(ownerships);
     buildCountryFilters(countries);
     buildDisciplineFilters(fields || []);
     setupSlider();
@@ -62,6 +65,36 @@ function buildTypeFilters(types) {
                 activeFilters.types.add(type);
             } else {
                 activeFilters.types.delete(type);
+            }
+            applyFilters();
+        });
+
+        container.appendChild(label);
+    });
+}
+
+function buildOwnershipFilters(ownerships) {
+    const container = document.getElementById('ownership-filters');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const sortedOwnerships = ownerships.filter(o => o).sort();
+
+    sortedOwnerships.forEach(own => {
+        const label = document.createElement('label');
+        label.className = 'country-label';
+        
+        label.innerHTML = `
+            <input type="checkbox" value="${own}" checked>
+            ${own}
+        `;
+
+        const checkbox = label.querySelector('input');
+        checkbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                activeFilters.ownerships.add(own);
+            } else {
+                activeFilters.ownerships.delete(own);
             }
             applyFilters();
         });
@@ -178,6 +211,7 @@ function applyFilters() {
 
     window.appState.allData.forEach(inst => {
         const matchType = activeFilters.types.has(inst.t || 'Unknown');
+        const matchOwnership = activeFilters.ownerships.has(inst.o || 'Unknown');
         const matchCountry = activeFilters.countries.size === 0 || activeFilters.countries.has(inst.c);
         
         let matchDiscipline = true;
@@ -193,7 +227,7 @@ function applyFilters() {
 
         const matchWorks = countForFilter >= activeFilters.minWorks;
 
-        if (matchType && matchCountry && matchDiscipline && matchWorks) {
+        if (matchType && matchOwnership && matchCountry && matchDiscipline && matchWorks) {
             filteredData.push(inst);
             const marker = window.appState.markersById[inst.id];
             if (marker) visibleMarkers.push(marker);

@@ -94,12 +94,17 @@ async function loadData() {
         const markers = [];
         const uniqueTypes = new Set();
         const uniqueCountries = new Set();
+        const uniqueOwnerships = new Set();
+        const fieldsSet = new Set();
 
         data.forEach(inst => {
+            if (inst.f) Object.keys(inst.f).forEach(k => fieldsSet.add(k));
+            
             if (inst.lat && inst.lng) {
                 const type = inst.t || 'Unknown';
                 uniqueTypes.add(type);
                 if (inst.c) uniqueCountries.add(inst.c);
+                if (inst.o) uniqueOwnerships.add(inst.o);
 
                 const color = getColorForType(type);
                 const marker = L.marker([inst.lat, inst.lng], {
@@ -127,8 +132,10 @@ async function loadData() {
         // Dispatch event that data is loaded for other scripts (filters, tables)
         window.dispatchEvent(new CustomEvent('dataLoaded', { 
             detail: { 
-                types: Array.from(uniqueTypes).sort(),
-                countries: Array.from(uniqueCountries).sort()
+                types: Array.from(uniqueTypes),
+                countries: Array.from(uniqueCountries),
+                ownerships: Array.from(uniqueOwnerships),
+                fields: Array.from(fieldsSet)
             }
         }));
 

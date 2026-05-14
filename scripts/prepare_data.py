@@ -56,11 +56,16 @@ def process_data(input_file):
                 if field_name and count > 0:
                     fields[field_name] = fields.get(field_name, 0) + count
 
+        own = str(row.get('ownership', '')).strip().capitalize()
+        if not own or own.lower() == 'nan' or own == 'None':
+            own = 'Unknown'
+
         record = {
             "id": clean_id,
             "n": str(row.get('display_name', '')),
             "c": str(row.get('country_code', '')),
             "t": str(row.get('institution_type', 'Unknown')),
+            "o": own,
             "lat": clean_float(row.get('ror_lat')),
             "lng": clean_float(row.get('ror_lng')),
             "w": clean_float(row.get('works_count')),
