@@ -20,6 +20,41 @@ body.dark-mode {
     --bg-alt: #1f2937;
     --border-color: #374151;
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+}
+
+/* Dark Mode Overrides for Leaflet */
+body.dark-mode .leaflet-control-zoom a,
+body.dark-mode .leaflet-control-attribution,
+body.dark-mode .leaflet-popup-content-wrapper,
+body.dark-mode .leaflet-popup-tip {
+    background-color: var(--bg-main) !important;
+    color: var(--text-main) !important;
+    border-color: var(--border-color) !important;
+}
+
+body.dark-mode .leaflet-control-zoom a:hover {
+    background-color: var(--bg-alt) !important;
+}
+
+body.dark-mode .leaflet-popup-content-wrapper {
+    box-shadow: 0 3px 14px rgba(0,0,0,0.4);
+}
+
+/* Custom Scrollbar for Dark Mode */
+body.dark-mode *::-webkit-scrollbar {
+    width: 10px;
+}
+body.dark-mode *::-webkit-scrollbar-track {
+    background: var(--bg-main);
+}
+body.dark-mode *::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 5px;
+    border: 2px solid var(--bg-main);
+}
+body.dark-mode *::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
 }
 
 * {
