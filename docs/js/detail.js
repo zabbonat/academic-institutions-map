@@ -2,8 +2,8 @@ window.showDetail = function(ror_id) {
     const panel = document.getElementById('detail-panel');
     const content = document.getElementById('detail-content');
     
-    // Find the data locally
-    const data = window.appState.allData.find(d => d.id === ror_id);
+    // Use O(1) lookup
+    const data = window.appState.dataById[ror_id];
     
     if (!data) {
         panel.classList.remove('hidden');

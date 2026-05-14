@@ -35,7 +35,16 @@ def process_data(input_file):
     os.makedirs('docs/data', exist_ok=True)
     index_data = []
 
-    print("Processing records into a single optimized file...")
+    # To save space, we'll map types and ownerships to small integers
+    type_map = {}
+    own_map = {}
+    
+    def get_id(mapping, val):
+        if val not in mapping:
+            mapping[val] = len(mapping)
+        return mapping[val]
+
+    print("Processing records into optimized format...")
     for _, row in tqdm(df.iterrows(), total=len(df)):
         ror_id = str(row.get('ror_id', ''))
         if not ror_id or pd.isna(ror_id) or ror_id == 'nan':
@@ -46,7 +55,7 @@ def process_data(input_file):
         clean_id = ror_id.split('/')[-1]
         summary_stats = safe_eval(row.get('summary_stats')) or {}
         
-        # Extract unique field names from topics (just for filtering, no counts)
+        # Extract unique field names from topics
         topics = safe_eval(row.get('topics')) or []
         field_names = set()
         if isinstance(topics, list):
@@ -68,13 +77,15 @@ def process_data(input_file):
         own = str(row.get('ownership', '')).strip().capitalize()
         if not own or own.lower() == 'nan' or own == 'None':
             own = 'Unknown'
+        
+        inst_type = str(row.get('institution_type', 'Unknown'))
 
         record = {
             "id": clean_id,
             "n": str(row.get('display_name', '')),
             "c": str(row.get('country_code', '')),
-            "t": str(row.get('institution_type', 'Unknown')),
-            "o": own,
+            "t": get_id(type_map, inst_type),
+            "o": get_id(own_map, own),
             "lat": clean_float(row.get('ror_lat')),
             "lng": clean_float(row.get('ror_lng')),
             "w": clean_float(row.get('works_count')),
@@ -90,9 +101,18 @@ def process_data(input_file):
         record = {k: v for k, v in record.items() if v is not None and v != '' and v != 'nan'}
         index_data.append(record)
 
+    # Wrap data with metadata (mappings)
+    final_output = {
+        "types": {v: k for k, v in type_map.items()},
+        "ownerships": {v: k for k, v in own_map.items()},
+        "data": index_data
+    }
+
     print("Saving docs/data/index.json...")
     with open("docs/data/index.json", "w", encoding="utf-8") as f:
-        json.dump(index_data, f, separators=(',', ':')) # minified
+        json.dump(final_output, f, separators=(',', ':')) # minified
+        
+    print(f"Data preparation complete! Types: {len(type_map)}, Ownerships: {len(own_map)}")
         
     print("Data preparation complete! Single optimized file created.")
 

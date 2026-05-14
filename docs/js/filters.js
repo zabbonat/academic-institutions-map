@@ -240,6 +240,20 @@ function buildCountryFilters(countries) {
     }
 }
 
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+const debouncedApplyFilters = debounce(applyFilters, 150);
+
 function setupSlider() {
     const slider = document.getElementById('works-slider');
     const display = document.getElementById('works-slider-val');
@@ -247,47 +261,54 @@ function setupSlider() {
 
     slider.addEventListener('input', (e) => {
         if (display) display.textContent = parseInt(e.target.value, 10).toLocaleString();
-    });
-
-    slider.addEventListener('change', (e) => {
-        activeFilters.minWorks = parseInt(e.target.value, 10);
-        applyFilters();
+        debouncedApplyFilters();
     });
 }
 
 function applyFilters() {
-    const visibleMarkers = [];
-    const filteredData = [];
-
-    window.appState.allData.forEach(inst => {
-        const matchType = activeFilters.types.has(inst.t || 'Unknown');
-        const matchOwnership = activeFilters.ownerships.has(inst.o || 'Unknown');
-        const matchCountry = activeFilters.countries.size === 0 || activeFilters.countries.has(inst.c);
+    // Show a subtle loading state if data is large
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) sidebar.style.opacity = '0.7';
+    
+    // Use setTimeout to allow UI to show loading state
+    setTimeout(() => {
+        const visibleMarkers = [];
+        const filteredData = [];
+        const allData = window.appState.allData;
         
-        let matchDiscipline = true;
-        if (activeFilters.discipline) {
-            matchDiscipline = inst.f && Array.isArray(inst.f) && inst.f.includes(activeFilters.discipline);
-        }
+        // Cache sets for faster lookup in loop
+        const activeTypes = activeFilters.types;
+        const activeOwnerships = activeFilters.ownerships;
+        const activeCountries = activeFilters.countries;
+        const activeDiscipline = activeFilters.discipline;
+        const minWorks = activeFilters.minWorks;
+        const lineageIds = activeFilters.lineageIds;
 
-        const matchWorks = (inst.w || 0) >= activeFilters.minWorks;
+        for (let i = 0; i < allData.length; i++) {
+            const inst = allData[i];
+            
+            if (!activeTypes.has(inst.t)) continue;
+            if (!activeOwnerships.has(inst.o)) continue;
+            if (activeCountries.size > 0 && !activeCountries.has(inst.c)) continue;
+            
+            if (activeDiscipline && (!inst.f || !inst.f.includes(activeDiscipline))) continue;
+            if ((inst.w || 0) < minWorks) continue;
+            
+            if (lineageIds && (!inst.l || !inst.l.some(id => lineageIds.includes(id)))) continue;
 
-        let matchLineage = true;
-        if (activeFilters.lineageIds) {
-            matchLineage = inst.l && Array.isArray(inst.l) && inst.l.some(id => activeFilters.lineageIds.includes(id));
-        }
-
-        if (matchType && matchOwnership && matchCountry && matchDiscipline && matchWorks && matchLineage) {
             filteredData.push(inst);
             const marker = window.appState.markersById[inst.id];
             if (marker) visibleMarkers.push(marker);
         }
-    });
 
-    if (window.appState.clusterGroup) {
-        window.appState.clusterGroup.clearLayers();
-        window.appState.clusterGroup.addLayers(visibleMarkers);
-    }
-    updateTable(filteredData);
+        if (window.appState.clusterGroup) {
+            window.appState.clusterGroup.clearLayers();
+            window.appState.clusterGroup.addLayers(visibleMarkers);
+        }
+        updateTable(filteredData);
+        
+        if (sidebar) sidebar.style.opacity = '1';
+    }, 0);
 }
 
 function updateTable(data) {

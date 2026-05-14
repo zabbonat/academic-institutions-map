@@ -4,7 +4,10 @@ window.appState = {
     clusterGroup: null,
     allData: [],
     markersById: {},
-    colors: {}, // Map of type to color
+    dataById: {}, // Quick lookup for detail panel and search
+    typeMap: {},
+    ownMap: {},
+    colors: {},
     colorPalette: [
         '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', 
         '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', 
@@ -103,17 +106,31 @@ function createMarkerIcon(color) {
 async function loadData() {
     try {
         const response = await fetch('data/index.json');
-        const data = await response.json();
+        const json = await response.json();
+        
+        const data = json.data;
+        const typeMap = json.types;
+        const ownMap = json.ownerships;
+        
         window.appState.allData = data;
+        window.appState.typeMap = typeMap;
+        window.appState.ownMap = ownMap;
         
         const markers = [];
-        const uniqueTypes = new Set();
+        const uniqueTypes = new Set(Object.values(typeMap));
         const uniqueCountries = new Set();
-        const uniqueOwnerships = new Set();
+        const uniqueOwnerships = new Set(Object.values(ownMap));
         const fieldsSet = new Set();
         const lineageCounts = {};
 
         data.forEach(inst => {
+            // Remap numeric IDs to strings for internal logic consistency
+            inst.t = typeMap[inst.t] || 'Unknown';
+            inst.o = ownMap[inst.o] || 'Unknown';
+            
+            // Store in lookup map
+            window.appState.dataById[inst.id] = inst;
+
             if (inst.f && Array.isArray(inst.f)) {
                 inst.f.forEach(k => fieldsSet.add(k));
             }
@@ -125,10 +142,8 @@ async function loadData() {
             }
             
             if (inst.lat && inst.lng) {
-                const type = inst.t || 'Unknown';
-                uniqueTypes.add(type);
+                const type = inst.t;
                 if (inst.c) uniqueCountries.add(inst.c);
-                if (inst.o) uniqueOwnerships.add(inst.o);
 
                 const color = getColorForType(type);
                 const marker = L.marker([inst.lat, inst.lng], {
