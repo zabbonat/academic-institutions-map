@@ -30,7 +30,16 @@ function renderDetailContent(data) {
     html += `<div class="inst-meta">${data.t || 'Unknown'} • ${data.o || 'Unknown'} • ${data.c || 'Unknown'}</div>`;
     html += '</div>';
 
-    // Stats — always total
+    // Lineage Button
+    if (data.l && Array.isArray(data.l) && data.l.length > 0) {
+        html += `
+            <button id="show-lineage-btn" style="width: 100%; padding: 10px; background: var(--bg-alt); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; margin-bottom: 24px; font-size: 0.875rem; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <span>🔗</span> Show Related Institutions
+            </button>
+        `;
+    }
+
+    // Stats
     html += `
         <div class="stat-grid">
             <div class="stat-box">
@@ -61,15 +70,25 @@ function renderDetailContent(data) {
     // Links
     html += `<h3 class="section-title">Links</h3>`;
     html += '<ul class="links-list">';
-    if (data.u) {
-        html += `<li><a href="${data.u}" target="_blank">Homepage</a></li>`;
-    }
-    if (data.wiki) {
-        html += `<li><a href="${data.wiki}" target="_blank">Wikipedia</a></li>`;
-    }
+    if (data.u) html += `<li><a href="${data.u}" target="_blank">Homepage</a></li>`;
+    if (data.wiki) html += `<li><a href="${data.wiki}" target="_blank">Wikipedia</a></li>`;
     html += `<li><a href="https://ror.org/${data.id}" target="_blank">ROR</a></li>`;
     html += `<li><a href="https://openalex.org/institutions/ror:${data.id}" target="_blank">OpenAlex</a></li>`;
     html += '</ul>';
 
     content.innerHTML = html;
+
+    // Attach event listener to lineage button
+    const lineageBtn = document.getElementById('show-lineage-btn');
+    if (lineageBtn) {
+        lineageBtn.onclick = () => {
+            if (window.setLineageFilter) {
+                window.setLineageFilter(data.l, data.n);
+                // Close sidebar on mobile
+                if (window.innerWidth <= 768) {
+                    document.getElementById('sidebar').classList.remove('open');
+                }
+            }
+        };
+    }
 }

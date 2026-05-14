@@ -3,7 +3,9 @@ let activeFilters = {
     ownerships: new Set(),
     countries: new Set(),
     discipline: '',
-    minWorks: 0
+    minWorks: 0,
+    lineageIds: null,
+    lineageRootName: ''
 };
 
 let currentSort = {
@@ -23,82 +25,96 @@ window.addEventListener('dataLoaded', (e) => {
     buildCountryFilters(countries);
     buildDisciplineFilters(fields || []);
     setupSlider();
-    
-    // Initial render of table
-    updateTable(window.appState.allData);
     setupTableSorting();
+    setupLineageControls();
+    
+    // Initial apply
+    applyFilters();
 
     // Setup Top Institutions toggle
     const toggleTop = document.getElementById('toggle-top-institutions');
     const topContent = document.getElementById('top-institutions-content');
     const topIcon = document.getElementById('top-inst-icon');
 
-    toggleTop.addEventListener('click', () => {
-        if (topContent.style.display === 'none') {
-            topContent.style.display = 'block';
-            topIcon.textContent = '▲';
-        } else {
-            topContent.style.display = 'none';
-            topIcon.textContent = '▼';
-        }
-    });
+    if (toggleTop) {
+        toggleTop.addEventListener('click', () => {
+            if (topContent.style.display === 'none') {
+                topContent.style.display = 'block';
+                topIcon.textContent = '▲';
+            } else {
+                topContent.style.display = 'none';
+                topIcon.textContent = '▼';
+            }
+        });
+    }
 });
+
+function setupLineageControls() {
+    const clearBtn = document.getElementById('clear-lineage-filter');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            activeFilters.lineageIds = null;
+            activeFilters.lineageRootName = '';
+            document.getElementById('lineage-active-banner').classList.add('hidden');
+            applyFilters();
+        });
+    }
+}
+
+window.setLineageFilter = function(lineageIds, rootName) {
+    activeFilters.lineageIds = lineageIds;
+    activeFilters.lineageRootName = rootName;
+    
+    const banner = document.getElementById('lineage-active-banner');
+    const info = document.getElementById('lineage-info');
+    if (banner && info) {
+        banner.classList.remove('hidden');
+        info.textContent = `Showing institutions related to: ${rootName}`;
+    }
+    
+    applyFilters();
+};
 
 function buildTypeFilters(types) {
     const container = document.getElementById('type-filters');
     container.innerHTML = '';
-
     types.forEach(type => {
-        const color = window.getColorForType ? window.getColorForType(type) : '#cccccc';
         const label = document.createElement('label');
-        label.className = 'country-label'; // reuse class for styling
-        
+        const color = window.getColorForType ? window.getColorForType(type) : '#ccc';
         label.innerHTML = `
-            <input type="checkbox" value="${type}" checked>
-            <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background-color:${color}; margin-right:4px;"></span>
+            <input type="checkbox" checked value="${type}">
+            <span class="color-dot" style="background-color: ${color}"></span>
             ${type}
         `;
-
-        const checkbox = label.querySelector('input');
-        checkbox.addEventListener('change', (e) => {
-            if (e.target.checked) {
-                activeFilters.types.add(type);
-            } else {
-                activeFilters.types.delete(type);
-            }
+        
+        label.querySelector('input').addEventListener('change', (e) => {
+            if (e.target.checked) activeFilters.types.add(type);
+            else activeFilters.types.delete(type);
             applyFilters();
         });
-
+        
         container.appendChild(label);
     });
 }
 
 function buildOwnershipFilters(ownerships) {
     const container = document.getElementById('ownership-filters');
-    if (!container) return;
     container.innerHTML = '';
-
-    const sortedOwnerships = ownerships.filter(o => o).sort();
-
-    sortedOwnerships.forEach(own => {
+    const sorted = Array.from(ownerships).sort();
+    sorted.forEach(own => {
         const label = document.createElement('label');
         label.className = 'country-label';
-        
         label.innerHTML = `
-            <input type="checkbox" value="${own}" checked>
+            <input type="checkbox" checked value="${own}">
             ${own}
         `;
-
-        const checkbox = label.querySelector('input');
-        checkbox.addEventListener('change', (e) => {
-            if (e.target.checked) {
-                activeFilters.ownerships.add(own);
-            } else {
-                activeFilters.ownerships.delete(own);
-            }
+        
+        label.querySelector('input').addEventListener('change', (e) => {
+            if (e.target.checked) activeFilters.ownerships.add(own);
+            else activeFilters.ownerships.delete(own);
             applyFilters();
         });
-
+        
         container.appendChild(label);
     });
 }
@@ -107,7 +123,6 @@ function buildDisciplineFilters(fields) {
     const select = document.getElementById('discipline-filter');
     const clearBtn = document.getElementById('clear-discipline-filter');
     
-    // Sort fields alphabetically
     const sortedFields = fields.filter(f => f).sort();
 
     sortedFields.forEach(field => {
@@ -134,33 +149,25 @@ function buildDisciplineFilters(fields) {
 function buildCountryFilters(countries) {
     const container = document.getElementById('country-filters');
     container.innerHTML = '';
-    
-    // Sort countries alphabetically
     const sortedCountries = countries.filter(c => c).sort();
 
     sortedCountries.forEach(country => {
         const label = document.createElement('label');
         label.className = 'country-label';
-        
         label.innerHTML = `
             <input type="checkbox" value="${country}">
             ${country}
         `;
-
-        const checkbox = label.querySelector('input');
-        checkbox.addEventListener('change', (e) => {
-            if (e.target.checked) {
-                activeFilters.countries.add(country);
-            } else {
-                activeFilters.countries.delete(country);
-            }
+        
+        label.querySelector('input').addEventListener('change', (e) => {
+            if (e.target.checked) activeFilters.countries.add(country);
+            else activeFilters.countries.delete(country);
             applyFilters();
         });
-
+        
         container.appendChild(label);
     });
 
-    // Country Search
     const searchInput = document.getElementById('country-search');
     searchInput.addEventListener('input', (e) => {
         const query = e.target.value.toLowerCase().trim();
@@ -175,18 +182,14 @@ function buildCountryFilters(countries) {
         });
     });
 
-    // Clear All
     const clearBtn = document.getElementById('clear-country-filter');
     clearBtn.addEventListener('click', () => {
         activeFilters.countries.clear();
         const checkboxes = container.querySelectorAll('input[type="checkbox"]');
         checkboxes.forEach(cb => cb.checked = false);
         searchInput.value = '';
-        
-        // Reset display
         const labels = container.querySelectorAll('.country-label');
         labels.forEach(label => label.style.display = 'flex');
-
         applyFilters();
     });
 }
@@ -214,7 +217,6 @@ function applyFilters() {
         const matchOwnership = activeFilters.ownerships.has(inst.o || 'Unknown');
         const matchCountry = activeFilters.countries.size === 0 || activeFilters.countries.has(inst.c);
         
-        // Discipline is now a boolean: does the institution have this field?
         let matchDiscipline = true;
         if (activeFilters.discipline) {
             matchDiscipline = inst.f && Array.isArray(inst.f) && inst.f.includes(activeFilters.discipline);
@@ -222,18 +224,20 @@ function applyFilters() {
 
         const matchWorks = (inst.w || 0) >= activeFilters.minWorks;
 
-        if (matchType && matchOwnership && matchCountry && matchDiscipline && matchWorks) {
+        let matchLineage = true;
+        if (activeFilters.lineageIds) {
+            matchLineage = inst.l && Array.isArray(inst.l) && inst.l.some(id => activeFilters.lineageIds.includes(id));
+        }
+
+        if (matchType && matchOwnership && matchCountry && matchDiscipline && matchWorks && matchLineage) {
             filteredData.push(inst);
             const marker = window.appState.markersById[inst.id];
             if (marker) visibleMarkers.push(marker);
         }
     });
 
-    // Update map
     window.appState.clusterGroup.clearLayers();
     window.appState.clusterGroup.addLayers(visibleMarkers);
-
-    // Update table
     updateTable(filteredData);
 }
 
@@ -241,28 +245,22 @@ function updateTable(data) {
     const tbody = document.querySelector('#top-institutions-table tbody');
     tbody.innerHTML = '';
 
-    // Update subtitle
     const subtitle = document.getElementById('top-inst-subtitle');
     subtitle.textContent = `Showing top 50 of ${data.length.toLocaleString()} filtered institutions`;
 
-    // Sort data
     const sorted = [...data].sort((a, b) => {
         const valA = a[currentSort.column] || 0;
         const valB = b[currentSort.column] || 0;
-        
         if (typeof valA === 'string') {
             return currentSort.desc ? valB.localeCompare(valA) : valA.localeCompare(valB);
         }
-        
         return currentSort.desc ? valB - valA : valA - valB;
     });
 
-    // Take top 50 for performance
     const top50 = sorted.slice(0, 50);
 
     top50.forEach(inst => {
         const tr = document.createElement('tr');
-
         tr.innerHTML = `
             <td>
                 <div style="font-weight: 500">${inst.n}</div>
@@ -271,41 +269,27 @@ function updateTable(data) {
             <td>${(inst.w || 0).toLocaleString()}</td>
             <td>${(inst.cb || 0).toLocaleString()}</td>
         `;
-        
         tr.addEventListener('click', () => {
-            if (window.flyToInstitution) {
-                window.flyToInstitution(inst.id);
-            }
-            if (window.innerWidth <= 768) {
-                document.getElementById('sidebar').classList.remove('open');
-            }
+            if (window.flyToInstitution) window.flyToInstitution(inst.id);
+            if (window.innerWidth <= 768) document.getElementById('sidebar').classList.remove('open');
         });
-        
         tbody.appendChild(tr);
     });
 }
 
 function setupTableSorting() {
     const headers = document.querySelectorAll('#top-institutions-table th[data-sort]');
-    
     headers.forEach(th => {
         th.addEventListener('click', () => {
             const column = th.dataset.sort;
-            
             if (currentSort.column === column) {
                 currentSort.desc = !currentSort.desc;
             } else {
                 currentSort.column = column;
                 currentSort.desc = true;
             }
-
-            // Update UI
-            headers.forEach(h => {
-                h.classList.remove('active-sort', 'desc', 'asc');
-            });
+            document.querySelectorAll('#top-institutions-table th').forEach(h => h.classList.remove('active-sort', 'asc', 'desc'));
             th.classList.add('active-sort', currentSort.desc ? 'desc' : 'asc');
-
-            // Re-apply filters which will re-sort and render
             applyFilters();
         });
     });

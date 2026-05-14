@@ -55,6 +55,16 @@ def process_data(input_file):
                 if field_name:
                     field_names.add(field_name)
 
+        # Extract lineage (OpenAlex IDs)
+        lineage = safe_eval(row.get('lineage')) or []
+        lineage_ids = []
+        if isinstance(lineage, list):
+            for l_url in lineage:
+                if isinstance(l_url, str):
+                    l_id = l_url.split('/')[-1]
+                    if l_id:
+                        lineage_ids.append(l_id)
+
         own = str(row.get('ownership', '')).strip().capitalize()
         if not own or own.lower() == 'nan' or own == 'None':
             own = 'Unknown'
@@ -72,7 +82,8 @@ def process_data(input_file):
             "h": clean_float(summary_stats.get('h_index')),
             "u": str(row.get('homepage_url', '')) if pd.notna(row.get('homepage_url')) else None,
             "wiki": str(row.get('wikipedia_url', '')) if pd.notna(row.get('wikipedia_url')) else None,
-            "f": sorted(field_names) if field_names else None
+            "f": sorted(field_names) if field_names else None,
+            "l": lineage_ids if lineage_ids else None
         }
         
         # Remove nulls to save space
