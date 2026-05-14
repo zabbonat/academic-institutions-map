@@ -96,10 +96,17 @@ async function loadData() {
         const uniqueCountries = new Set();
         const uniqueOwnerships = new Set();
         const fieldsSet = new Set();
+        const lineageCounts = {};
 
         data.forEach(inst => {
             if (inst.f && Array.isArray(inst.f)) {
                 inst.f.forEach(k => fieldsSet.add(k));
+            }
+
+            if (inst.l && Array.isArray(inst.l)) {
+                inst.l.forEach(lid => {
+                    lineageCounts[lid] = (lineageCounts[lid] || 0) + 1;
+                });
             }
             
             if (inst.lat && inst.lng) {
@@ -127,6 +134,7 @@ async function loadData() {
         });
 
         window.appState.clusterGroup.addLayers(markers);
+        window.appState.lineageCounts = lineageCounts;
 
         // Make getColorForType globally accessible for filters
         window.getColorForType = getColorForType;

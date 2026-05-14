@@ -30,8 +30,11 @@ function renderDetailContent(data) {
     html += `<div class="inst-meta">${data.t || 'Unknown'} • ${data.o || 'Unknown'} • ${data.c || 'Unknown'}</div>`;
     html += '</div>';
 
-    // Lineage Button
-    if (data.l && Array.isArray(data.l) && data.l.length > 0) {
+    // Lineage Button (Only show if there are actual other institutions in the network)
+    const counts = window.appState.lineageCounts || {};
+    const hasPeers = data.l && Array.isArray(data.l) && data.l.some(lid => (counts[lid] || 0) > 1);
+
+    if (hasPeers) {
         html += `
             <button id="show-lineage-btn" style="width: 100%; padding: 10px; background: var(--bg-alt); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; margin-bottom: 24px; font-size: 0.875rem; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px;">
                 <span>🔗</span> Show Related Institutions
