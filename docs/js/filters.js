@@ -88,10 +88,30 @@ window.setLineageFilter = function(lineageIds, rootName) {
     const info = document.getElementById('lineage-info');
     if (banner && info) {
         banner.classList.remove('hidden');
-        info.textContent = `Showing institutions related to: ${rootName}`;
+        info.innerHTML = `
+            <div>Showing institutions related to: <strong>${rootName}</strong></div>
+            <div style="margin-top: 8px; font-style: italic; color: rgba(255,255,255,0.8);">P.S. Zoom out to see the full global network!</div>
+        `;
     }
     
     applyFilters();
+
+    // Auto-zoom to fit the lineage
+    if (window.appState.map) {
+        const lineagePoints = [];
+        window.appState.allData.forEach(inst => {
+            if (inst.lat && inst.lng && inst.l && Array.isArray(inst.l)) {
+                if (inst.l.some(id => lineageIds.includes(id))) {
+                    lineagePoints.push([inst.lat, inst.lng]);
+                }
+            }
+        });
+
+        if (lineagePoints.length > 0) {
+            const bounds = L.latLngBounds(lineagePoints);
+            window.appState.map.fitBounds(bounds, { padding: [50, 50], maxZoom: 8 });
+        }
+    }
 };
 
 function buildTypeFilters(types) {
