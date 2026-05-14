@@ -16,7 +16,13 @@ window.appState = {
 // Initialize Map
 function initMap() {
     window.appState.map = L.map('map', {
-        zoomControl: false // Move zoom control if needed, or leave default
+        zoomControl: false,
+        maxBounds: [
+            [-90, -180],
+            [90, 180]
+        ],
+        maxBoundsViscosity: 1.0,
+        minZoom: 2
     }).setView([20, 0], 2);
 
     L.control.zoom({
@@ -27,7 +33,8 @@ function initMap() {
     L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
         subdomains: 'abcd',
-        maxZoom: 20
+        maxZoom: 20,
+        noWrap: true
     }).addTo(window.appState.map);
 
     // Initialize MarkerClusterGroup
