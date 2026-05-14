@@ -1,54 +1,33 @@
 let searchIndex;
-let searchDocs = [];
 
-async function initSearch() {
-    try {
-        const response = await fetch('data/search_docs.json');
-        searchDocs = await response.json();
+window.addEventListener('dataLoaded', () => {
+    // Initialize FlexSearch Document index
+    searchIndex = new FlexSearch.Document({
+        document: {
+            id: "id",
+            index: ["n"], // only display_name
+            store: true
+        },
+        tokenize: "forward",
+        cache: true
+    });
 
-        // Initialize FlexSearch Document index
-        searchIndex = new FlexSearch.Document({
-            document: {
-                id: "ror_id",
-                index: [
-                    "display_name",
-                    "alternatives",
-                    "acronyms"
-                ],
-                store: true
-            },
-            tokenize: "forward",
-            cache: true
+    const data = window.appState.allData;
+
+    // Add documents to index
+    data.forEach(doc => {
+        searchIndex.add({
+            id: doc.id,
+            n: doc.n
         });
+    });
 
-        // Add documents to index
-        searchDocs.forEach(doc => {
-            // Join arrays into strings for searching
-            const alternatives = (doc.alternatives || []).join(" ");
-            const acronyms = (doc.acronyms || []).join(" ");
-            
-            searchIndex.add({
-                ror_id: doc.ror_id,
-                display_name: doc.display_name,
-                alternatives: alternatives,
-                acronyms: acronyms
-            });
-        });
-
-        setupSearchUI();
-
-    } catch (error) {
-        console.error("Error initializing search:", error);
-    }
-}
+    setupSearchUI();
+});
 
 function setupSearchUI() {
     const searchInput = document.getElementById('search-input');
     const searchResults = document.getElementById('search-results');
-
-    // Create a map for quick document retrieval by ror_id
-    const docMap = new Map();
-    searchDocs.forEach(d => docMap.set(d.ror_id, d));
 
     searchInput.addEventListener('input', (e) => {
         const query = e.target.value.trim();
@@ -59,12 +38,10 @@ function setupSearchUI() {
             return;
         }
 
-        // Perform search across fields
         const results = searchIndex.search(query, 10, {
             enrich: true
         });
 
-        // Collect unique IDs from all matched fields
         const matchedIds = new Set();
         results.forEach(fieldResult => {
             fieldResult.result.forEach(r => matchedIds.add(r.id));
@@ -78,30 +55,28 @@ function setupSearchUI() {
 
         searchResults.innerHTML = '';
         
-        // Take top 10
         const topIds = Array.from(matchedIds).slice(0, 10);
         
         topIds.forEach(id => {
-            const doc = docMap.get(id);
+            // Find in global data
+            const doc = window.appState.allData.find(d => d.id === id);
             if (!doc) return;
 
             const item = document.createElement('div');
             item.className = 'search-result-item';
             item.innerHTML = `
-                <div class="search-result-name">${doc.display_name}</div>
-                <div class="search-result-meta">${doc.institution_type} • ${doc.country_code || 'Unknown'}</div>
+                <div class="search-result-name">${doc.n}</div>
+                <div class="search-result-meta">${doc.t || 'Unknown'} • ${doc.c || 'Unknown'}</div>
             `;
             
             item.addEventListener('click', () => {
-                searchInput.value = doc.display_name;
+                searchInput.value = doc.n;
                 searchResults.classList.add('hidden');
                 
-                // Fly to map marker and open details
                 if (window.flyToInstitution) {
-                    window.flyToInstitution(doc.ror_id);
+                    window.flyToInstitution(doc.id);
                 }
                 
-                // On mobile, close sidebar automatically
                 if (window.innerWidth <= 768) {
                     document.getElementById('sidebar').classList.remove('open');
                 }
@@ -113,14 +88,9 @@ function setupSearchUI() {
         searchResults.classList.remove('hidden');
     });
 
-    // Close results when clicking outside
     document.addEventListener('click', (e) => {
         if (!searchInput.contains(e.target) && !searchResults.contains(e.target)) {
             searchResults.classList.add('hidden');
         }
     });
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-    initSearch();
-});

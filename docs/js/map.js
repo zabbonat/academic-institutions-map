@@ -89,25 +89,26 @@ async function loadData() {
         const uniqueCountries = new Set();
 
         data.forEach(inst => {
-            if (inst.ror_lat && inst.ror_lng) {
-                uniqueTypes.add(inst.institution_type);
-                if (inst.country_code) uniqueCountries.add(inst.country_code);
+            if (inst.lat && inst.lng) {
+                const type = inst.t || 'Unknown';
+                uniqueTypes.add(type);
+                if (inst.c) uniqueCountries.add(inst.c);
 
-                const color = getColorForType(inst.institution_type);
-                const marker = L.marker([inst.ror_lat, inst.ror_lng], {
+                const color = getColorForType(type);
+                const marker = L.marker([inst.lat, inst.lng], {
                     icon: createMarkerIcon(color)
                 });
 
-                marker.ror_id = inst.ror_id; // Attach ID for click handler
+                marker.ror_id = inst.id; // Attach ID for click handler
                 marker.inst_data = inst; // Keep light reference
                 
                 marker.on('click', () => {
                     // Trigger global detail function
-                    if (window.showDetail) window.showDetail(inst.ror_id);
+                    if (window.showDetail) window.showDetail(inst.id);
                 });
 
                 markers.push(marker);
-                window.appState.markersById[inst.ror_id] = marker;
+                window.appState.markersById[inst.id] = marker;
             }
         });
 

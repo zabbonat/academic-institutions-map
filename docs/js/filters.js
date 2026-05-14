@@ -5,7 +5,7 @@ let activeFilters = {
 };
 
 let currentSort = {
-    column: 'works_count',
+    column: 'w',
     desc: true
 };
 
@@ -92,13 +92,13 @@ function applyFilters() {
     const filteredData = [];
 
     window.appState.allData.forEach(inst => {
-        const matchType = activeFilters.types.has(inst.institution_type);
-        const matchCountry = activeFilters.countries.size === 0 || activeFilters.countries.has(inst.country_code);
-        const matchWorks = (inst.works_count || 0) >= activeFilters.minWorks;
+        const matchType = activeFilters.types.has(inst.t || 'Unknown');
+        const matchCountry = activeFilters.countries.size === 0 || activeFilters.countries.has(inst.c);
+        const matchWorks = (inst.w || 0) >= activeFilters.minWorks;
 
         if (matchType && matchCountry && matchWorks) {
             filteredData.push(inst);
-            const marker = window.appState.markersById[inst.ror_id];
+            const marker = window.appState.markersById[inst.id];
             if (marker) visibleMarkers.push(marker);
         }
     });
@@ -134,16 +134,16 @@ function updateTable(data) {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>
-                <div style="font-weight: 500">${inst.display_name}</div>
-                <div style="font-size: 0.75rem; color: var(--text-muted)">${inst.country_code || ''}</div>
+                <div style="font-weight: 500">${inst.n}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted)">${inst.c || ''}</div>
             </td>
-            <td>${(inst.works_count || 0).toLocaleString()}</td>
-            <td>${(inst.cited_by_count || 0).toLocaleString()}</td>
+            <td>${(inst.w || 0).toLocaleString()}</td>
+            <td>${(inst.cb || 0).toLocaleString()}</td>
         `;
         
         tr.addEventListener('click', () => {
             if (window.flyToInstitution) {
-                window.flyToInstitution(inst.ror_id);
+                window.flyToInstitution(inst.id);
             }
             if (window.innerWidth <= 768) {
                 document.getElementById('sidebar').classList.remove('open');
