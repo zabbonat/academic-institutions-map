@@ -35,11 +35,13 @@ def process_data(input_file):
     os.makedirs('docs/data', exist_ok=True)
     index_data = []
 
-    # To save space, we'll map types and ownerships to small integers
+    # To save space, we'll map types, ownerships, and countries to small integers
     type_map = {}
     own_map = {}
+    country_map = {}
     
     def get_id(mapping, val):
+        if not val: val = 'Unknown'
         if val not in mapping:
             mapping[val] = len(mapping)
         return mapping[val]
@@ -54,6 +56,10 @@ def process_data(input_file):
             
         clean_id = ror_id.split('/')[-1]
         summary_stats = safe_eval(row.get('summary_stats')) or {}
+        geo = safe_eval(row.get('geo')) or {}
+        
+        # Use full country name if available, fallback to code
+        country_name = geo.get('country') or row.get('country_code') or 'Unknown'
         
         # Extract unique field names from topics
         topics = safe_eval(row.get('topics')) or []
@@ -83,7 +89,7 @@ def process_data(input_file):
         record = {
             "id": clean_id,
             "n": str(row.get('display_name', '')),
-            "c": str(row.get('country_code', '')),
+            "c": get_id(country_map, country_name),
             "t": get_id(type_map, inst_type),
             "o": get_id(own_map, own),
             "lat": clean_float(row.get('ror_lat')),
@@ -105,6 +111,7 @@ def process_data(input_file):
     final_output = {
         "types": {v: k for k, v in type_map.items()},
         "ownerships": {v: k for k, v in own_map.items()},
+        "countries": {v: k for k, v in country_map.items()},
         "data": index_data
     }
 
@@ -112,7 +119,7 @@ def process_data(input_file):
     with open("docs/data/index.json", "w", encoding="utf-8") as f:
         json.dump(final_output, f, separators=(',', ':')) # minified
         
-    print(f"Data preparation complete! Types: {len(type_map)}, Ownerships: {len(own_map)}")
+    print(f"Data prep complete! Types: {len(type_map)}, Ownerships: {len(own_map)}, Countries: {len(country_map)}")
         
     print("Data preparation complete! Single optimized file created.")
 

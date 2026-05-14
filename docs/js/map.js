@@ -111,14 +111,16 @@ async function loadData() {
         const data = json.data;
         const typeMap = json.types;
         const ownMap = json.ownerships;
+        const countryMap = json.countries;
         
         window.appState.allData = data;
         window.appState.typeMap = typeMap;
         window.appState.ownMap = ownMap;
+        window.appState.countryMap = countryMap;
         
         const markers = [];
         const uniqueTypes = new Set(Object.values(typeMap));
-        const uniqueCountries = new Set();
+        const uniqueCountries = new Set(Object.values(countryMap));
         const uniqueOwnerships = new Set(Object.values(ownMap));
         const fieldsSet = new Set();
         const lineageCounts = {};
@@ -127,6 +129,7 @@ async function loadData() {
             // Remap numeric IDs to strings for internal logic consistency
             inst.t = typeMap[inst.t] || 'Unknown';
             inst.o = ownMap[inst.o] || 'Unknown';
+            inst.c = countryMap[inst.c] || 'Unknown';
             
             // Store in lookup map
             window.appState.dataById[inst.id] = inst;
@@ -143,8 +146,8 @@ async function loadData() {
             
             if (inst.lat && inst.lng) {
                 const type = inst.t;
-                if (inst.c) uniqueCountries.add(inst.c);
-
+                // uniqueCountries already populated from countryMap values
+                
                 const color = getColorForType(type);
                 const marker = L.marker([inst.lat, inst.lng], {
                     icon: createMarkerIcon(color)
