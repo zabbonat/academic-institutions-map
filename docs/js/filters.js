@@ -214,18 +214,13 @@ function applyFilters() {
         const matchOwnership = activeFilters.ownerships.has(inst.o || 'Unknown');
         const matchCountry = activeFilters.countries.size === 0 || activeFilters.countries.has(inst.c);
         
+        // Discipline is now a boolean: does the institution have this field?
         let matchDiscipline = true;
-        let countForFilter = inst.w || 0;
-
         if (activeFilters.discipline) {
-            if (inst.f && inst.f[activeFilters.discipline]) {
-                countForFilter = inst.f[activeFilters.discipline];
-            } else {
-                matchDiscipline = false;
-            }
+            matchDiscipline = inst.f && Array.isArray(inst.f) && inst.f.includes(activeFilters.discipline);
         }
 
-        const matchWorks = countForFilter >= activeFilters.minWorks;
+        const matchWorks = (inst.w || 0) >= activeFilters.minWorks;
 
         if (matchType && matchOwnership && matchCountry && matchDiscipline && matchWorks) {
             filteredData.push(inst);
@@ -250,22 +245,10 @@ function updateTable(data) {
     const subtitle = document.getElementById('top-inst-subtitle');
     subtitle.textContent = `Showing top 50 of ${data.length.toLocaleString()} filtered institutions`;
 
-    // Update Works column header
-    const worksTh = document.querySelector('th[data-sort="w"]');
-    if (worksTh) {
-        worksTh.textContent = activeFilters.discipline ? `Works in ${activeFilters.discipline}` : 'Works';
-    }
-
     // Sort data
     const sorted = [...data].sort((a, b) => {
-        let valA = a[currentSort.column] || 0;
-        let valB = b[currentSort.column] || 0;
-
-        // Custom sort for Works if discipline is selected
-        if (currentSort.column === 'w' && activeFilters.discipline) {
-            valA = (a.f && a.f[activeFilters.discipline]) ? a.f[activeFilters.discipline] : 0;
-            valB = (b.f && b.f[activeFilters.discipline]) ? b.f[activeFilters.discipline] : 0;
-        }
+        const valA = a[currentSort.column] || 0;
+        const valB = b[currentSort.column] || 0;
         
         if (typeof valA === 'string') {
             return currentSort.desc ? valB.localeCompare(valA) : valA.localeCompare(valB);
@@ -279,18 +262,13 @@ function updateTable(data) {
 
     top50.forEach(inst => {
         const tr = document.createElement('tr');
-        
-        let worksDisplay = (inst.w || 0).toLocaleString();
-        if (activeFilters.discipline && inst.f && inst.f[activeFilters.discipline]) {
-            worksDisplay = inst.f[activeFilters.discipline].toLocaleString();
-        }
 
         tr.innerHTML = `
             <td>
                 <div style="font-weight: 500">${inst.n}</div>
                 <div style="font-size: 0.75rem; color: var(--text-muted)">${inst.c || ''}</div>
             </td>
-            <td>${worksDisplay}</td>
+            <td>${(inst.w || 0).toLocaleString()}</td>
             <td>${(inst.cb || 0).toLocaleString()}</td>
         `;
         
