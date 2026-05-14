@@ -1,6 +1,7 @@
 let activeFilters = {
     types: new Set(),
     countries: new Set(),
+    discipline: '',
     minWorks: 0
 };
 
@@ -10,13 +11,14 @@ let currentSort = {
 };
 
 window.addEventListener('dataLoaded', (e) => {
-    const { types, countries } = e.detail;
+    const { types, countries, fields } = e.detail;
     
     // By default all types are active
     activeFilters.types = new Set(types);
 
     buildTypeFilters(types);
     buildCountryFilters(countries);
+    buildDisciplineFilters(fields || []);
     setupSlider();
     
     // Initial render of table
@@ -44,12 +46,13 @@ function buildTypeFilters(types) {
     container.innerHTML = '';
 
     types.forEach(type => {
-        const color = window.appState.colors[type];
+        const color = window.getColorForType ? window.getColorForType(type) : '#cccccc';
         const label = document.createElement('label');
+        label.className = 'country-label'; // reuse class for styling
         
         label.innerHTML = `
             <input type="checkbox" value="${type}" checked>
-            <span class="color-dot" style="background-color: ${color}"></span>
+            <span style="display:inline-block; width:12px; height:12px; border-radius:50%; background-color:${color}; margin-right:4px;"></span>
             ${type}
         `;
 
@@ -64,6 +67,34 @@ function buildTypeFilters(types) {
         });
 
         container.appendChild(label);
+    });
+}
+
+function buildDisciplineFilters(fields) {
+    const select = document.getElementById('discipline-filter');
+    const clearBtn = document.getElementById('clear-discipline-filter');
+    
+    // Sort fields alphabetically
+    const sortedFields = fields.filter(f => f).sort();
+
+    sortedFields.forEach(field => {
+        const option = document.createElement('option');
+        option.value = field;
+        option.textContent = field;
+        select.appendChild(option);
+    });
+
+    select.addEventListener('change', (e) => {
+        activeFilters.discipline = e.target.value;
+        clearBtn.style.display = activeFilters.discipline ? 'inline-block' : 'none';
+        applyFilters();
+    });
+
+    clearBtn.addEventListener('click', () => {
+        activeFilters.discipline = '';
+        select.value = '';
+        clearBtn.style.display = 'none';
+        applyFilters();
     });
 }
 
@@ -148,9 +179,21 @@ function applyFilters() {
     window.appState.allData.forEach(inst => {
         const matchType = activeFilters.types.has(inst.t || 'Unknown');
         const matchCountry = activeFilters.countries.size === 0 || activeFilters.countries.has(inst.c);
-        const matchWorks = (inst.w || 0) >= activeFilters.minWorks;
+        
+        let matchDiscipline = true;
+        let countForFilter = inst.w || 0;
 
-        if (matchType && matchCountry && matchWorks) {
+        if (activeFilters.discipline) {
+            if (inst.f && inst.f[activeFilters.discipline]) {
+                countForFilter = inst.f[activeFilters.discipline];
+            } else {
+                matchDiscipline = false;
+            }
+        }
+
+        const matchWorks = countForFilter >= activeFilters.minWorks;
+
+        if (matchType && matchCountry && matchDiscipline && matchWorks) {
             filteredData.push(inst);
             const marker = window.appState.markersById[inst.id];
             if (marker) visibleMarkers.push(marker);
@@ -173,10 +216,22 @@ function updateTable(data) {
     const subtitle = document.getElementById('top-inst-subtitle');
     subtitle.textContent = `Showing top 50 of ${data.length.toLocaleString()} filtered institutions`;
 
+    // Update Works column header
+    const worksTh = document.querySelector('th[data-sort="w"]');
+    if (worksTh) {
+        worksTh.textContent = activeFilters.discipline ? `Works in ${activeFilters.discipline}` : 'Works';
+    }
+
     // Sort data
     const sorted = [...data].sort((a, b) => {
-        const valA = a[currentSort.column] || 0;
-        const valB = b[currentSort.column] || 0;
+        let valA = a[currentSort.column] || 0;
+        let valB = b[currentSort.column] || 0;
+
+        // Custom sort for Works if discipline is selected
+        if (currentSort.column === 'w' && activeFilters.discipline) {
+            valA = (a.f && a.f[activeFilters.discipline]) ? a.f[activeFilters.discipline] : 0;
+            valB = (b.f && b.f[activeFilters.discipline]) ? b.f[activeFilters.discipline] : 0;
+        }
         
         if (typeof valA === 'string') {
             return currentSort.desc ? valB.localeCompare(valA) : valA.localeCompare(valB);
@@ -190,12 +245,18 @@ function updateTable(data) {
 
     top50.forEach(inst => {
         const tr = document.createElement('tr');
+        
+        let worksDisplay = (inst.w || 0).toLocaleString();
+        if (activeFilters.discipline && inst.f && inst.f[activeFilters.discipline]) {
+            worksDisplay = inst.f[activeFilters.discipline].toLocaleString();
+        }
+
         tr.innerHTML = `
             <td>
                 <div style="font-weight: 500">${inst.n}</div>
                 <div style="font-size: 0.75rem; color: var(--text-muted)">${inst.c || ''}</div>
             </td>
-            <td>${(inst.w || 0).toLocaleString()}</td>
+            <td>${worksDisplay}</td>
             <td>${(inst.cb || 0).toLocaleString()}</td>
         `;
         

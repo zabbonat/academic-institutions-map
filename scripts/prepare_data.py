@@ -45,6 +45,16 @@ def process_data(input_file):
             
         clean_id = ror_id.split('/')[-1]
         summary_stats = safe_eval(row.get('summary_stats')) or {}
+        
+        # Aggregate topics into fields
+        topics = safe_eval(row.get('topics')) or []
+        fields = {}
+        if isinstance(topics, list):
+            for t in topics:
+                field_name = t.get('field', {}).get('display_name')
+                count = t.get('count', 0)
+                if field_name and count > 0:
+                    fields[field_name] = fields.get(field_name, 0) + count
 
         record = {
             "id": clean_id,
@@ -57,7 +67,8 @@ def process_data(input_file):
             "cb": clean_float(row.get('cited_by_count')),
             "h": clean_float(summary_stats.get('h_index')),
             "u": str(row.get('homepage_url', '')) if pd.notna(row.get('homepage_url')) else None,
-            "wiki": str(row.get('wikipedia_url', '')) if pd.notna(row.get('wikipedia_url')) else None
+            "wiki": str(row.get('wikipedia_url', '')) if pd.notna(row.get('wikipedia_url')) else None,
+            "f": fields if fields else None
         }
         
         # Remove nulls to save space
