@@ -432,6 +432,13 @@ tbody tr:hover {
     color: var(--text-muted);
 }
 
+.inst-alt-names {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    font-style: italic;
+}
+
 .stat-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);

@@ -118,69 +118,90 @@ async function loadData() {
         window.appState.ownMap = ownMap;
         window.appState.countryMap = countryMap;
         
-        const markers = [];
-        const uniqueTypes = new Set(Object.values(typeMap));
-        const uniqueCountries = new Set(Object.values(countryMap));
-        const uniqueOwnerships = new Set(Object.values(ownMap));
+        const uniqueTypes = Array.from(new Set(Object.values(typeMap)));
+        const uniqueCountries = Array.from(new Set(Object.values(countryMap)));
+        const uniqueOwnerships = Array.from(new Set(Object.values(ownMap)));
         const fieldsSet = new Set();
         const lineageCounts = {};
 
-        data.forEach(inst => {
-            // Remap numeric IDs to strings for internal logic consistency
-            inst.t = typeMap[inst.t] || 'Unknown';
-            inst.o = ownMap[inst.o] || 'Unknown';
-            inst.c = countryMap[inst.c] || 'Unknown';
-            
-            // Store in lookup map
-            window.appState.dataById[inst.id] = inst;
-
-            if (inst.f && Array.isArray(inst.f)) {
-                inst.f.forEach(k => fieldsSet.add(k));
-            }
-
-            if (inst.l && Array.isArray(inst.l)) {
-                inst.l.forEach(lid => {
-                    lineageCounts[lid] = (lineageCounts[lid] || 0) + 1;
-                });
-            }
-            
-            if (inst.lat && inst.lng) {
-                const type = inst.t;
-                // uniqueCountries already populated from countryMap values
-                
-                const color = getColorForType(type);
-                const marker = L.marker([inst.lat, inst.lng], {
-                    icon: createMarkerIcon(color)
-                });
-
-                marker.ror_id = inst.id; // Attach ID for click handler
-                marker.inst_data = inst; // Keep light reference
-                
-                marker.on('click', () => {
-                    // Trigger global detail function
-                    if (window.showDetail) window.showDetail(inst.id);
-                });
-
-                markers.push(marker);
-                window.appState.markersById[inst.id] = marker;
-            }
-        });
-
-        window.appState.clusterGroup.addLayers(markers);
-        window.appState.lineageCounts = lineageCounts;
-
-        // Make getColorForType globally accessible for filters
-        window.getColorForType = getColorForType;
-
-        // Dispatch event that data is loaded for other scripts (filters, tables)
+        // 1. Dispatch initial metadata so filters can build immediately
+        // We'll calculate fields and lineage counts during the chunked processing
         window.dispatchEvent(new CustomEvent('dataLoaded', { 
             detail: { 
-                types: Array.from(uniqueTypes),
-                countries: Array.from(uniqueCountries),
-                ownerships: Array.from(uniqueOwnerships),
-                fields: Array.from(fieldsSet)
+                types: uniqueTypes,
+                countries: uniqueCountries,
+                ownerships: uniqueOwnerships,
+                fields: [] // Will be updated later or we can do a quick pass if small
             }
         }));
+
+        // 2. Chunked processing
+        let index = 0;
+        const chunkSize = 2000;
+        const total = data.length;
+
+        function processChunk() {
+            const end = Math.min(index + chunkSize, total);
+            const batchMarkers = [];
+
+            for (; index < end; index++) {
+                const inst = data[index];
+                
+                // Remap IDs
+                inst.t = typeMap[inst.t] || 'Unknown';
+                inst.o = ownMap[inst.o] || 'Unknown';
+                inst.c = countryMap[inst.c] || 'Unknown';
+                
+                window.appState.dataById[inst.id] = inst;
+
+                if (inst.f && Array.isArray(inst.f)) {
+                    inst.f.forEach(k => fieldsSet.add(k));
+                }
+
+                if (inst.l && Array.isArray(inst.l)) {
+                    inst.l.forEach(lid => {
+                        lineageCounts[lid] = (lineageCounts[lid] || 0) + 1;
+                    });
+                }
+                
+                if (inst.lat && inst.lng) {
+                    const color = getColorForType(inst.t);
+                    const marker = L.marker([inst.lat, inst.lng], {
+                        icon: createMarkerIcon(color)
+                    });
+
+                    marker.ror_id = inst.id;
+                    marker.inst_data = inst;
+                    
+                    marker.on('click', () => {
+                        if (window.showDetail) window.showDetail(inst.id);
+                    });
+
+                    batchMarkers.push(marker);
+                    window.appState.markersById[inst.id] = marker;
+                }
+            }
+
+            if (batchMarkers.length > 0) {
+                window.appState.clusterGroup.addLayers(batchMarkers);
+            }
+
+            if (index < total) {
+                // Schedule next chunk
+                requestAnimationFrame(processChunk);
+            } else {
+                // Finished
+                window.appState.lineageCounts = lineageCounts;
+                // Update filters with fields
+                window.dispatchEvent(new CustomEvent('fieldsUpdated', { 
+                    detail: { fields: Array.from(fieldsSet) }
+                }));
+                console.log('All markers loaded');
+            }
+        }
+
+        // Start processing
+        requestAnimationFrame(processChunk);
 
     } catch (error) {
         console.error('Error loading map data:', error);

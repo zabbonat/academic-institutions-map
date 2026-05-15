@@ -27,6 +27,11 @@ function renderDetailContent(data) {
     // Header
     html += '<div class="inst-header">';
     html += `<h2 class="inst-name">${data.n}</h2>`;
+    
+    if (data.a && Array.isArray(data.a) && data.a.length > 0) {
+        html += `<div class="inst-alt-names">Also known as: ${data.a.join(', ')}</div>`;
+    }
+    
     html += `<div class="inst-meta">${data.t || 'Unknown'} • ${data.o || 'Unknown'} • ${data.c || 'Unknown'}</div>`;
     html += '</div>';
 
