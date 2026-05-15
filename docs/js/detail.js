@@ -1,4 +1,7 @@
+let currentDetailId = null;
+
 window.showDetail = function(ror_id) {
+    currentDetailId = ror_id;
     const panel = document.getElementById('detail-panel');
     const content = document.getElementById('detail-content');
     
@@ -15,8 +18,16 @@ window.showDetail = function(ror_id) {
     renderDetailContent(data);
 };
 
+window.addEventListener('compareListUpdated', () => {
+    if (currentDetailId && !document.getElementById('detail-panel').classList.contains('hidden')) {
+        const data = window.appState.dataById[currentDetailId];
+        if (data) renderDetailContent(data);
+    }
+});
+
 document.getElementById('close-detail').addEventListener('click', () => {
     document.getElementById('detail-panel').classList.add('hidden');
+    currentDetailId = null;
 });
 
 function renderDetailContent(data) {

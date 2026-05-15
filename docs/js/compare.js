@@ -23,6 +23,17 @@
             floatBtn.classList.remove('hidden');
         } else {
             floatBtn.classList.add('hidden');
+            compareModal.classList.add('hidden');
+        }
+    }
+
+    function removeInstitution(id) {
+        const list = window.appState.compareList;
+        const idx = list.indexOf(id);
+        if (idx > -1) {
+            list.splice(idx, 1);
+            window.dispatchEvent(new CustomEvent('compareListUpdated'));
+            renderComparison();
         }
     }
 
@@ -31,7 +42,13 @@
         const data = ids.map(id => window.appState.dataById[id]).filter(d => d);
 
         if (data.length === 0) {
-            compareView.innerHTML = '<div style="grid-column: span 2; text-align: center; padding: 40px;">No institutions selected for comparison.</div>';
+            compareView.innerHTML = `
+                <div style="grid-column: span 2; text-align: center; padding: 40px;">
+                    <p>No institutions selected for comparison.</p>
+                    <button id="close-empty-compare" class="detail-btn" style="width:auto; margin: 20px auto;">Close</button>
+                </div>`;
+            const closeBtn = document.getElementById('close-empty-compare');
+            if (closeBtn) closeBtn.onclick = () => compareModal.classList.add('hidden');
             return;
         }
 
@@ -44,6 +61,7 @@
                     <div class="compare-item-header">
                         <h2 class="inst-name">${inst.n}</h2>
                         <div class="inst-meta">${inst.t} • ${inst.c}</div>
+                        <button class="remove-from-compare" data-id="${inst.id}" style="margin-top: 12px; background: none; border: 1px solid var(--border-color); color: #ef4444; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;">Remove</button>
                     </div>
 
                     <div class="compare-row">
@@ -93,6 +111,11 @@
         });
 
         compareView.innerHTML = html;
+
+        // Attach listeners to remove buttons
+        compareView.querySelectorAll('.remove-from-compare').forEach(btn => {
+            btn.onclick = () => removeInstitution(btn.dataset.id);
+        });
     }
 
     function getSharedLineageCount(inst1, inst2) {
