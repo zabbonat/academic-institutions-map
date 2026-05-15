@@ -41,11 +41,18 @@ function renderDetailContent(data) {
 
     if (hasPeers) {
         html += `
-            <button id="show-lineage-btn" style="width: 100%; padding: 10px; background: var(--bg-alt); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; margin-bottom: 24px; font-size: 0.875rem; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <button id="show-lineage-btn" class="detail-btn">
                 <span>🔗</span> Show Related Institutions
             </button>
         `;
     }
+
+    const isInCompare = window.appState.compareList.includes(data.id);
+    html += `
+        <button id="compare-btn" class="detail-btn ${isInCompare ? 'active' : ''}" style="margin-top: ${hasPeers ? '0' : '0'};">
+            <span>⚖️</span> ${isInCompare ? 'Remove from Compare' : 'Add to Compare'}
+        </button>
+    `;
 
     // Stats
     html += `
@@ -97,6 +104,28 @@ function renderDetailContent(data) {
                     document.getElementById('sidebar').classList.remove('open');
                 }
             }
+        };
+    }
+
+    // Attach event listener to compare button
+    const compareBtn = document.getElementById('compare-btn');
+    if (compareBtn) {
+        compareBtn.onclick = () => {
+            const list = window.appState.compareList;
+            const idx = list.indexOf(data.id);
+            if (idx > -1) {
+                list.splice(idx, 1);
+            } else {
+                if (list.length >= 2) {
+                    alert('You can compare up to 2 institutions. Please remove one first.');
+                    return;
+                }
+                list.push(data.id);
+            }
+            // Re-render button state
+            renderDetailContent(data);
+            // Notify comparison system
+            window.dispatchEvent(new CustomEvent('compareListUpdated'));
         };
     }
 }

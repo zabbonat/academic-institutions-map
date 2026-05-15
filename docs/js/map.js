@@ -13,7 +13,8 @@ window.appState = {
         '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', 
         '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', 
         '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080'
-    ]
+    ],
+    compareList: [] // Stores IDs of institutions to compare
 };
 
 // Initialize Map

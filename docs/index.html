@@ -143,6 +143,24 @@
                 <!-- Content injected by JS -->
             </div>
         </aside>
+
+        <!-- Comparison Floating Button -->
+        <div id="compare-float-btn" class="hidden">
+            <span>⚖️</span> Compare Institutions (<span id="compare-count">0</span>)
+        </div>
+
+        <!-- Comparison Modal -->
+        <div id="compare-modal" class="hidden">
+            <div class="compare-container">
+                <div class="compare-header">
+                    <h2>Comparison View</h2>
+                    <button id="close-compare" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text-muted);">×</button>
+                </div>
+                <div id="compare-content-view" class="compare-content">
+                    <!-- Content injected by JS -->
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Libraries -->
@@ -155,6 +173,7 @@
     <script src="js/filters.js?v=1.1"></script>
     <script src="js/detail.js?v=1.1"></script>
     <script src="js/search.js?v=1.1"></script>
+    <script src="js/compare.js?v=1.1"></script>
     <script src="js/map.js?v=1.1"></script>
 
 </body>
