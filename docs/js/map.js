@@ -140,6 +140,7 @@ async function loadData() {
         let index = 0;
         const chunkSize = 2000;
         const total = data.length;
+        const seenCoords = new Map(); // Track overlaps for jittering
 
         function processChunk() {
             const end = Math.min(index + chunkSize, total);
@@ -166,8 +167,24 @@ async function loadData() {
                 }
                 
                 if (inst.lat && inst.lng) {
+                    const coordKey = `${inst.lat},${inst.lng}`;
+                    const count = seenCoords.get(coordKey) || 0;
+                    seenCoords.set(coordKey, count + 1);
+
+                    let displayLat = inst.lat;
+                    let displayLng = inst.lng;
+
+                    if (count > 0) {
+                        // Apply a tiny jitter (random walk) to make overlapping markers selectable
+                        // We use a deterministic-ish offset based on count to avoid huge displacements
+                        const angle = count * (Math.PI * 2 / 8); // Spread in a circle
+                        const radius = 0.0001 * Math.sqrt(count);
+                        displayLat += Math.cos(angle) * radius;
+                        displayLng += Math.sin(angle) * radius;
+                    }
+
                     const color = getColorForType(inst.t);
-                    const marker = L.marker([inst.lat, inst.lng], {
+                    const marker = L.marker([displayLat, displayLng], {
                         icon: createMarkerIcon(color)
                     });
 
