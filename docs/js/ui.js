@@ -60,8 +60,16 @@
         }
     };
 
+    window.addEventListener('filtersApplied', () => {
+        if (heatmapToggle.checked) {
+            renderHeatmap();
+        }
+    });
+
     function renderHeatmap() {
-        const data = window.appState.allData;
+        if (heatmapLayer) heatmapLayer.remove();
+        
+        const data = window.appState.currentFilteredData || window.appState.allData;
         const points = data
             .filter(d => d.lat && d.lng)
             .map(d => [d.lat, d.lng, Math.sqrt(d.w || 1) / 10]); // Weight by works

@@ -322,7 +322,9 @@ function applyFilters() {
             window.appState.clusterGroup.addLayers(visibleMarkers);
         }
 
+        window.appState.currentFilteredData = filteredData;
         updateTable(filteredData);
+        window.dispatchEvent(new CustomEvent('filtersApplied', { detail: filteredData }));
         
         if (sidebar) sidebar.style.opacity = '1';
     }, 50);
