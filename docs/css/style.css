@@ -125,12 +125,6 @@ body {
     color: var(--text-main);
 }
 
-.sidebar-header p {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    margin: 0;
-}
-
 .theme-icon-dark { display: none; }
 body.dark-mode .theme-icon-light { display: none; }
 body.dark-mode .theme-icon-dark { display: inline; }
