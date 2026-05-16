@@ -6,102 +6,110 @@
     const searchResults = document.getElementById('network-search-results');
 
     window.renderNetwork = function(seedId) {
+        console.log('Rendering network for:', seedId);
         const allData = window.appState.dataById;
         const seed = allData[seedId];
-        if (!seed) return;
-
-        placeholder.style.display = 'none';
-        container.style.display = 'block';
-
-        const nodes = [];
-        const edges = [];
-        const processed = new Set();
-        
-        // Find all related institutions (up to 2 levels deep)
-        function traverse(instId, level) {
-            if (level > 2 || processed.has(instId)) return;
-            processed.add(instId);
-
-            const inst = allData[instId];
-            if (!inst) return;
-
-            nodes.push({
-                id: inst.id,
-                label: inst.n.length > 30 ? inst.n.substring(0, 27) + '...' : inst.n,
-                title: inst.n,
-                color: {
-                    background: window.appState.colors[inst.t] || '#97C2FC',
-                    border: '#2B7CE9'
-                },
-                value: Math.sqrt(inst.w || 1),
-                group: inst.t
-            });
-
-            if (inst.l && Array.isArray(inst.l)) {
-                // Find others that share these lineage IDs
-                // This is expensive if we do it for everyone.
-                // Instead, let's just use the 'l' array as a grouping mechanism.
-                // Or better: connect institutions that share at least one common lineage ID.
-                
-                // For simplicity in the first version, let's connect institutions
-                // that are explicitly linked via common lineage IDs in a star-like pattern
-                // or just show the immediate "network" of the seed.
-            }
+        if (!seed) {
+            console.error('Seed institution not found:', seedId);
+            return;
         }
 
-        // Simpler approach for now: find all institutions that share ANY lineage ID with the seed
-        if (seed.l && Array.isArray(seed.l)) {
-            traverse(seed.id, 0);
+        try {
+            placeholder.style.display = 'none';
+            container.style.display = 'block';
+            container.style.height = '100%'; // Force height
+
+            const nodes = [];
+            const edges = [];
+            const processed = new Set();
             
-            const seedLineages = new Set(seed.l);
-            Object.values(allData).forEach(other => {
-                if (other.id === seed.id) return;
-                if (other.l && Array.isArray(other.l)) {
-                    if (other.l.some(lid => seedLineages.has(lid))) {
-                        nodes.push({
-                            id: other.id,
-                            label: other.n.length > 20 ? other.n.substring(0, 17) + '...' : other.n,
-                            title: other.n,
-                            color: window.appState.colors[other.t] || '#97C2FC',
-                            value: Math.sqrt(other.w || 1)
-                        });
-                        edges.push({ from: seed.id, to: other.id });
+            // 1. Add Seed Node
+            const seedColor = window.getColorForType ? window.getColorForType(seed.t) : '#97C2FC';
+            nodes.push({
+                id: seed.id,
+                label: seed.n.length > 30 ? seed.n.substring(0, 27) + '...' : seed.n,
+                title: seed.n,
+                color: { background: seedColor, border: '#2B7CE9' },
+                font: { color: document.body.classList.contains('dark-mode') ? '#ffffff' : '#000000' },
+                value: Math.sqrt(seed.w || 1) * 2,
+                size: 30,
+                borderWidth: 3
+            });
+            processed.add(seed.id);
+
+            // 2. Find Related Institutions (One-pass optimization)
+            if (seed.l && Array.isArray(seed.l)) {
+                const seedLineages = new Set(seed.l);
+                const allInsts = window.appState.allData; // Use the array directly for faster iteration
+                
+                for (let i = 0; i < allInsts.length; i++) {
+                    const other = allInsts[i];
+                    if (other.id === seed.id) continue;
+                    
+                    if (other.l && Array.isArray(other.l)) {
+                        let shared = false;
+                        for (let j = 0; j < other.l.length; j++) {
+                            if (seedLineages.has(other.l[j])) {
+                                shared = true;
+                                break;
+                            }
+                        }
+                        
+                        if (shared) {
+                            const otherColor = window.getColorForType ? window.getColorForType(other.t) : '#97C2FC';
+                            nodes.push({
+                                id: other.id,
+                                label: other.n.length > 20 ? other.n.substring(0, 17) + '...' : other.n,
+                                title: other.n,
+                                color: { background: otherColor, border: '#2B7CE9' },
+                                font: { color: document.body.classList.contains('dark-mode') ? '#ffffff' : '#000000' },
+                                value: Math.sqrt(other.w || 1)
+                            });
+                            edges.push({ from: seed.id, to: other.id });
+                        }
                     }
                 }
-            });
-        }
-
-        const data = {
-            nodes: new vis.DataSet(nodes),
-            edges: new vis.DataSet(edges)
-        };
-
-        const options = {
-            nodes: {
-                shape: 'dot',
-                scaling: { label: { min: 8, max: 20 } },
-                font: { size: 12, face: 'Inter' }
-            },
-            edges: {
-                color: { inherit: 'from' },
-                smooth: { type: 'continuous' }
-            },
-            physics: {
-                stabilization: false,
-                barnesHut: { gravitationalConstant: -2000, springLength: 200 }
-            },
-            interaction: { hover: true, tooltipDelay: 200 }
-        };
-
-        if (network) network.destroy();
-        network = new vis.Network(container, data, options);
-        
-        network.on('click', (params) => {
-            if (params.nodes.length > 0) {
-                const nodeId = params.nodes[0];
-                if (window.showDetail) window.showDetail(nodeId);
             }
-        });
+
+            console.log(`Found ${nodes.length} nodes and ${edges.length} edges`);
+
+            const data = {
+                nodes: new vis.DataSet(nodes),
+                edges: new vis.DataSet(edges)
+            };
+
+            const options = {
+                nodes: {
+                    shape: 'dot',
+                    scaling: { label: { min: 8, max: 20 } },
+                    font: { face: 'Inter' }
+                },
+                edges: {
+                    color: { inherit: 'from', opacity: 0.5 },
+                    smooth: { type: 'continuous' }
+                },
+                physics: {
+                    enabled: true,
+                    stabilization: { iterations: 150 },
+                    barnesHut: { gravitationalConstant: -2000, springLength: 150 }
+                },
+                interaction: { hover: true, tooltipDelay: 200 }
+            };
+
+            if (network) network.destroy();
+            network = new vis.Network(container, data, options);
+            
+            network.on('click', (params) => {
+                if (params.nodes.length > 0) {
+                    const nodeId = params.nodes[0];
+                    if (window.showDetail) window.showDetail(nodeId);
+                }
+            });
+        } catch (err) {
+            console.error('Error rendering network:', err);
+            placeholder.style.display = 'block';
+            placeholder.innerHTML = `<p style="color:red">Error rendering network: ${err.message}</p>`;
+        }
     };
 
     // Integrate with search for seed selection
