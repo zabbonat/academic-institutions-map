@@ -108,9 +108,10 @@ function renderDetailContent(data) {
     const lineageBtn = document.getElementById('show-lineage-btn');
     if (lineageBtn) {
         lineageBtn.onclick = () => {
-            if (window.setLineageFilter) {
+            if (window.showNetwork) {
+                window.showNetwork(data.id);
+            } else if (window.setLineageFilter) {
                 window.setLineageFilter(data.l, data.n);
-                // Close sidebar on mobile
                 if (window.innerWidth <= 768) {
                     document.getElementById('sidebar').classList.remove('open');
                 }
