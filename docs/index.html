@@ -180,8 +180,11 @@
                 <div id="network-graph-container">
                     <div class="network-placeholder">
                         <p>Select an institution and click "Show Related Institutions" or use the search below to start the network analysis.</p>
-                        <div class="search-container" style="max-width: 400px; margin: 20px auto;">
-                             <input type="text" id="network-search-input" placeholder="Search for a seed institution...">
+                        <div class="search-container" style="max-width: 400px; margin: 20px auto; position: relative;">
+                             <div style="display: flex; gap: 8px;">
+                                <input type="text" id="network-search-input" placeholder="Search for a seed institution..." style="flex: 1;">
+                                <button id="clear-network" class="icon-btn" title="Clear Graph" style="display: none;">🗑️</button>
+                             </div>
                              <div id="network-search-results" class="hidden"></div>
                         </div>
                     </div>

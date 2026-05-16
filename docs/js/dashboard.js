@@ -3,8 +3,15 @@
     let typeChart = null;
     let ownershipChart = null;
 
+    window.addEventListener('filtersApplied', () => {
+        const dashboardView = document.getElementById('dashboard-view');
+        if (dashboardView && dashboardView.classList.contains('active')) {
+            window.renderDashboard();
+        }
+    });
+
     window.renderDashboard = function() {
-        const data = window.appState.allData;
+        const data = window.appState.currentFilteredData || window.appState.allData;
         if (!data || data.length === 0) return;
 
         // 1. Country Distribution

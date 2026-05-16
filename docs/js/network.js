@@ -4,6 +4,7 @@
     const placeholder = document.querySelector('.network-placeholder');
     const searchInput = document.getElementById('network-search-input');
     const searchResults = document.getElementById('network-search-results');
+    const clearBtn = document.getElementById('clear-network');
 
     window.renderNetwork = function(seedId) {
         console.log('Rendering network for:', seedId);
@@ -15,7 +16,8 @@
         }
 
         try {
-            placeholder.style.display = 'none';
+            placeholder.querySelector('p').style.display = 'none';
+            if (clearBtn) clearBtn.style.display = 'block';
             container.style.display = 'block';
             container.style.height = '100%'; // Force height
 
@@ -157,5 +159,20 @@
         if (networkTab) networkTab.click();
         renderNetwork(id);
     };
+
+    function clearNetwork() {
+        if (network) {
+            network.destroy();
+            network = null;
+        }
+        container.style.display = 'none';
+        placeholder.querySelector('p').style.display = 'block';
+        if (clearBtn) clearBtn.style.display = 'none';
+        searchInput.value = '';
+    }
+
+    if (clearBtn) {
+        clearBtn.onclick = clearNetwork;
+    }
 
 })();
