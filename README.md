@@ -26,12 +26,5 @@ The website relies on pre-processed JSON files generated from a source pandas Da
    ```
    This will output the lightweight index, search documents, and full institution JSON files into the `docs/data/` directory.
 
-## Deployment
-This project is configured to be hosted on **GitHub Pages**.
-1. Push the repository to GitHub.
-2. Go to your repository settings on GitHub.
-3. Under "Pages", select the `main` branch and the `/docs` folder as the source.
-4. The site will automatically build and deploy.
-
 ## License
 MIT License.
