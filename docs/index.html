@@ -26,15 +26,19 @@
         <!-- Sidebar -->
         <aside id="sidebar">
             <div class="sidebar-header">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="header-top">
                     <h1>Academic Map</h1>
-                    <div style="display: flex; gap: 8px;">
-                        <button id="dark-mode-toggle" title="Toggle Dark Mode" class="icon-btn">💡</button>
-                        <button id="collapse-sidebar" title="Collapse Sidebar" class="icon-btn">◀</button>
+                    <div class="header-actions">
+                        <button id="dark-mode-toggle" title="Toggle Dark Mode" class="icon-btn">
+                            <span class="theme-icon-light">☀️</span>
+                            <span class="theme-icon-dark">🌙</span>
+                        </button>
+                        <button id="collapse-sidebar" title="Collapse Sidebar" class="icon-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                        </button>
                     </div>
                 </div>
-                <p>Explore 110k+ institutions</p>
-                <button id="toggle-sidebar-mobile">☰</button>
+                <p>Global Research Repository</p>
             </div>
 
             <script>
@@ -134,12 +138,14 @@
         <main id="main-content">
             <!-- View Navigation -->
             <nav id="view-nav">
+                <div id="expand-sidebar" class="hidden" title="Expand Sidebar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </div>
                 <div class="nav-tabs">
                     <button class="nav-tab active" data-view="map">🗺️ Map</button>
                     <button class="nav-tab" data-view="dashboard">📊 Dashboard</button>
                     <button class="nav-tab" data-view="network">🕸️ Network</button>
                 </div>
-                <div id="expand-sidebar" class="hidden" title="Expand Sidebar">▶</div>
             </nav>
 
             <!-- View Containers -->
