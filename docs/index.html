@@ -28,7 +28,10 @@
             <div class="sidebar-header">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <h1>Academic Map</h1>
-                    <button id="dark-mode-toggle" title="Toggle Dark Mode" style="background: none; border: 1px solid var(--border-color); padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 1.2rem;">💡</button>
+                    <div style="display: flex; gap: 8px;">
+                        <button id="dark-mode-toggle" title="Toggle Dark Mode" class="icon-btn">💡</button>
+                        <button id="collapse-sidebar" title="Collapse Sidebar" class="icon-btn">◀</button>
+                    </div>
                 </div>
                 <p>Explore 110k+ institutions</p>
                 <button id="toggle-sidebar-mobile">☰</button>
@@ -127,10 +130,59 @@
             </div>
         </aside>
 
-        <!-- Map Container -->
-        <main id="map-wrapper">
-            <div id="map"></div>
+        <!-- Main Content Area -->
+        <main id="main-content">
+            <!-- View Navigation -->
+            <nav id="view-nav">
+                <div class="nav-tabs">
+                    <button class="nav-tab active" data-view="map">🗺️ Map</button>
+                    <button class="nav-tab" data-view="dashboard">📊 Dashboard</button>
+                    <button class="nav-tab" data-view="network">🕸️ Network</button>
+                </div>
+                <div id="expand-sidebar" class="hidden" title="Expand Sidebar">▶</div>
+            </nav>
 
+            <!-- View Containers -->
+            <div id="map-view" class="view-container active">
+                <div id="map-controls">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="heatmap-toggle">
+                        <span class="slider"></span>
+                        <span class="label">Heatmap</span>
+                    </label>
+                </div>
+                <div id="map"></div>
+            </div>
+
+            <div id="dashboard-view" class="view-container hidden">
+                <div class="dashboard-grid">
+                    <div class="chart-card large">
+                        <h3>Distribution by Country (Top 15)</h3>
+                        <canvas id="country-chart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Institution Types</h3>
+                        <canvas id="type-chart"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Ownership Structure</h3>
+                        <canvas id="ownership-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div id="network-view" class="view-container hidden">
+                <div id="network-graph-container">
+                    <div class="network-placeholder">
+                        <p>Select an institution and click "Show Related Institutions" or use the search below to start the network analysis.</p>
+                        <div class="search-container" style="max-width: 400px; margin: 20px auto;">
+                             <input type="text" id="network-search-input" placeholder="Search for a seed institution...">
+                             <div id="network-search-results" class="hidden"></div>
+                        </div>
+                    </div>
+                    <div id="network-graph"></div>
+                </div>
+            </div>
         </main>
 
         <!-- Detail Panel (Right Sidebar) -->
@@ -165,6 +217,7 @@
 
     <!-- Libraries -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/nextapps-de/flexsearch@0.7.31/dist/flexsearch.bundle.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -174,6 +227,8 @@
     <script src="js/detail.js?v=1.1"></script>
     <script src="js/search.js?v=1.1"></script>
     <script src="js/compare.js?v=1.1"></script>
+    <script src="js/ui.js?v=1.1"></script>
+    <script src="js/dashboard.js?v=1.1"></script>
     <script src="js/map.js?v=1.1"></script>
 
 </body>
