@@ -100,6 +100,8 @@ def process_data(input_file):
             own = 'Unknown'
         
         inst_type = str(row.get('institution_type', 'Unknown'))
+        if inst_type == 'Facility':
+            inst_type = 'Institute'
 
         # Extract alternative names and acronyms
         alt_names = set()
