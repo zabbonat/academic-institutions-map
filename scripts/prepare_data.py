@@ -39,7 +39,7 @@ def process_data(input_file):
     if input_file.endswith('.parquet'):
         df = pd.read_parquet(input_file)
     else:
-        df = pd.read_csv(input_file)
+        df = pd.read_csv(input_file, low_memory=False)
     print(f"Loaded {len(df)} records.")
 
     df = df.dropna(subset=['ror_lat', 'ror_lng'])
@@ -95,13 +95,28 @@ def process_data(input_file):
                     if l_id:
                         lineage_ids.append(l_id)
 
-        own = str(row.get('ownership', '')).strip().capitalize()
-        if not own or own.lower() == 'nan' or own == 'None':
-            own = 'Unknown'
+        own_llm = str(row.get('ownership_llm', '')).strip().lower()
+        if own_llm == 'private': own = 'Private'
+        elif own_llm == 'public': own = 'Public'
+        elif own_llm == 'hybrid': own = 'Hybrid'
+        else:
+            own = str(row.get('ownership', '')).strip().capitalize()
+            if not own or own.lower() == 'nan' or own == 'None':
+                own = 'Unknown'
         
-        inst_type = str(row.get('institution_type', 'Unknown'))
-        if inst_type == 'Facility':
-            inst_type = 'Institute'
+        inst_type_llm = str(row.get('institution_type_llm', '')).strip().lower()
+        if inst_type_llm == 'company': inst_type = 'Company'
+        elif inst_type_llm == 'university': inst_type = 'University'
+        elif inst_type_llm == 'research_institute': inst_type = 'Research Institute'
+        elif inst_type_llm == 'hospital': inst_type = 'Hospital'
+        elif inst_type_llm == 'government_agency': inst_type = 'Government Agency'
+        elif inst_type_llm == 'other': inst_type = 'Other'
+        else:
+            inst_type = str(row.get('institution_type', 'Unknown'))
+            if inst_type == 'Facility':
+                inst_type = 'Institute'
+            elif inst_type.lower() == 'nan' or not inst_type:
+                inst_type = 'Other'
 
         # Extract alternative names and acronyms
         alt_names = set()
@@ -165,6 +180,6 @@ def process_data(input_file):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('input_file', type=str, default='Affiliation_completeDATA.parquet', nargs='?')
+    parser.add_argument('input_file', type=str, default='institution_classified_LAST.csv', nargs='?')
     args = parser.parse_args()
     process_data(args.input_file)
