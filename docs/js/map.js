@@ -7,12 +7,17 @@ window.appState = {
     dataById: {}, // Quick lookup for detail panel and search
     typeMap: {},
     ownMap: {},
-    colors: {},
+    colors: {
+        'University': '#4363d8',
+        'Research Institute': '#3cb44b',
+        'Company': '#f58231',
+        'Hospital': '#e6194b',
+        'Government Agency': '#911eb4',
+        'Other': '#008080'
+    },
     colorPalette: [
-        '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', 
-        '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', 
-        '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', 
-        '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080'
+        '#4363d8', '#3cb44b', '#f58231', '#e6194b', '#911eb4', '#008080',
+        '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#e6beff', '#9a6324'
     ],
     compareList: [] // Stores IDs of institutions to compare
 };
@@ -106,7 +111,7 @@ function createMarkerIcon(color) {
 // Load Data
 async function loadData() {
     try {
-        const response = await fetch('data/index.json');
+        const response = await fetch('data/index.json?v=2.0');
         const json = await response.json();
         
         const data = json.data;

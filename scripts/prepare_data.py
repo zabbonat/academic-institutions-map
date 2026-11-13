@@ -48,19 +48,45 @@ def process_data(input_file):
     os.makedirs('docs/data', exist_ok=True)
     index_data = []
 
-    # To save space, we'll map types, ownerships, and countries to small integers
-    type_map = {}
-    own_map = {}
+    # Enforce the strict LLM taxonomy (no fallback to legacy institution_type / ownership)
+    TYPE_LABELS = {
+        'university': 'University',
+        'research_institute': 'Research Institute',
+        'company': 'Company',
+        'hospital': 'Hospital',
+        'government_agency': 'Government Agency',
+        'other': 'Other',
+    }
+    OWNERSHIP_LABELS = {
+        'public': 'Public',
+        'private': 'Private',
+        'hybrid': 'Hybrid',
+    }
+
+    # Pre-seed canonical integer mappings for space efficiency and deterministic UI order
+    type_map = {label: i for i, label in enumerate(TYPE_LABELS.values())}
+    own_map = {label: i for i, label in enumerate(OWNERSHIP_LABELS.values())}
     country_map = {}
-    
+    skipped_taxonomy = 0
+
     def get_id(mapping, val):
-        if not val: val = 'Unknown'
+        if not val:
+            val = 'Unknown'
         if val not in mapping:
             mapping[val] = len(mapping)
         return mapping[val]
 
     print("Processing records into optimized format...")
     for _, row in tqdm(df.iterrows(), total=len(df)):
+        inst_type_llm = str(row.get('institution_type_llm', '')).strip().lower()
+        own_llm = str(row.get('ownership_llm', '')).strip().lower()
+        if inst_type_llm not in TYPE_LABELS or own_llm not in OWNERSHIP_LABELS:
+            skipped_taxonomy += 1
+            continue
+
+        inst_type = TYPE_LABELS[inst_type_llm]
+        own = OWNERSHIP_LABELS[own_llm]
+
         ror_id = str(row.get('ror_id', ''))
         if not ror_id or pd.isna(ror_id) or ror_id == 'nan':
             ror_id = str(row.get('id', '')).split('/')[-1]
@@ -95,29 +121,6 @@ def process_data(input_file):
                     if l_id:
                         lineage_ids.append(l_id)
 
-        own_llm = str(row.get('ownership_llm', '')).strip().lower()
-        if own_llm == 'private': own = 'Private'
-        elif own_llm == 'public': own = 'Public'
-        elif own_llm == 'hybrid': own = 'Hybrid'
-        else:
-            own = str(row.get('ownership', '')).strip().capitalize()
-            if not own or own.lower() == 'nan' or own == 'None':
-                own = 'Unknown'
-        
-        inst_type_llm = str(row.get('institution_type_llm', '')).strip().lower()
-        if inst_type_llm == 'company': inst_type = 'Company'
-        elif inst_type_llm == 'university': inst_type = 'University'
-        elif inst_type_llm == 'research_institute': inst_type = 'Research Institute'
-        elif inst_type_llm == 'hospital': inst_type = 'Hospital'
-        elif inst_type_llm == 'government_agency': inst_type = 'Government Agency'
-        elif inst_type_llm == 'other': inst_type = 'Other'
-        else:
-            inst_type = str(row.get('institution_type', 'Unknown'))
-            if inst_type == 'Facility':
-                inst_type = 'Institute'
-            elif inst_type.lower() == 'nan' or not inst_type:
-                inst_type = 'Other'
-
         # Extract alternative names and acronyms
         alt_names = set()
         acronyms = safe_eval(row.get('display_name_acronyms'))
@@ -145,8 +148,8 @@ def process_data(input_file):
             "n": str(row.get('display_name', '')),
             "a": sorted(list(alt_names)) if alt_names else None,
             "c": get_id(country_map, country_name),
-            "t": get_id(type_map, inst_type),
-            "o": get_id(own_map, own),
+            "t": type_map[inst_type],
+            "o": own_map[own],
             "lat": clean_float(row.get('ror_lat')),
             "lng": clean_float(row.get('ror_lng')),
             "w": clean_float(row.get('works_count')),
@@ -174,7 +177,8 @@ def process_data(input_file):
     with open("docs/data/index.json", "w", encoding="utf-8") as f:
         json.dump(final_output, f, separators=(',', ':')) # minified
         
-    print(f"Data prep complete! Types: {len(type_map)}, Ownerships: {len(own_map)}, Countries: {len(country_map)}")
+    print(f"Data prep complete! Kept: {len(index_data)}, Skipped (outside LLM taxonomy): {skipped_taxonomy}")
+    print(f"Types ({len(type_map)}): {list(type_map.keys())}, Ownerships ({len(own_map)}): {list(own_map.keys())}, Countries: {len(country_map)}")
         
     print("Data preparation complete! Single optimized file created.")
 

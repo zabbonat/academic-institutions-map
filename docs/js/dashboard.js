@@ -35,10 +35,13 @@
         data.forEach(d => {
             typeCounts[d.t] = (typeCounts[d.t] || 0) + 1;
         });
+        const typeLabels = Object.keys(typeCounts);
+        const typeColors = typeLabels.map(t => window.getColorForType ? window.getColorForType(t) : '#4363d8');
         renderPieChart('type-chart', typeChart, 
-            Object.keys(typeCounts), 
+            typeLabels, 
             Object.values(typeCounts), 
-            (chart) => typeChart = chart
+            (chart) => typeChart = chart,
+            typeColors
         );
 
         // 3. Ownership Structure
@@ -46,10 +49,14 @@
         data.forEach(d => {
             ownCounts[d.o] = (ownCounts[d.o] || 0) + 1;
         });
+        const ownColorMap = { 'Public': '#3b82f6', 'Private': '#ef4444', 'Hybrid': '#f59e0b' };
+        const ownLabels = Object.keys(ownCounts);
+        const ownColors = ownLabels.map((o, idx) => ownColorMap[o] || window.appState.colorPalette[idx % window.appState.colorPalette.length]);
         renderPieChart('ownership-chart', ownershipChart, 
-            Object.keys(ownCounts), 
+            ownLabels, 
             Object.values(ownCounts), 
-            (chart) => ownershipChart = chart
+            (chart) => ownershipChart = chart,
+            ownColors
         );
     };
 
@@ -89,7 +96,7 @@
         callback(newChart);
     }
 
-    function renderPieChart(id, chartObj, labels, data, callback) {
+    function renderPieChart(id, chartObj, labels, data, callback, colors) {
         const ctx = document.getElementById(id).getContext('2d');
         if (chartObj) chartObj.destroy();
 
@@ -102,7 +109,7 @@
                 labels: labels,
                 datasets: [{
                     data: data,
-                    backgroundColor: window.appState.colorPalette,
+                    backgroundColor: colors || window.appState.colorPalette,
                     borderWidth: 0
                 }]
             },
