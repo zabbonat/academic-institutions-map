@@ -41,6 +41,10 @@ body.dark-mode .leaflet-popup-content-wrapper {
     box-shadow: 0 3px 14px rgba(0,0,0,0.4);
 }
 
+body.dark-mode .leaflet-tile-pane {
+    filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+}
+
 /* Custom Scrollbar for Dark Mode */
 body.dark-mode *::-webkit-scrollbar {
     width: 10px;

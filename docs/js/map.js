@@ -38,27 +38,17 @@ function initMap() {
         position: 'topright'
     }).addTo(window.appState.map);
 
-    const isDarkMode = document.body.classList.contains('dark-mode');
-    const tileUrl = isDarkMode 
-        ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-        : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+    const tileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
     window.appState.tileLayer = L.tileLayer(tileUrl, {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
-        subdomains: 'abcd',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxNativeZoom: 19,
         maxZoom: 20,
         noWrap: true
     }).addTo(window.appState.map);
 
     window.updateMapTheme = function() {
-        const isDark = document.body.classList.contains('dark-mode');
-        const newUrl = isDark 
-            ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
-            : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
-        
-        if (window.appState.tileLayer) {
-            window.appState.tileLayer.setUrl(newUrl);
-        }
+        // Dark mode styling for OpenStreetMap tiles is handled via CSS (.leaflet-tile-pane)
     };
 
     // Initialize MarkerClusterGroup
